@@ -177,7 +177,7 @@ class JitCore(object):
         @offset: starting address (int)
         @stop_offsets: set of address on which the jitter must stop
         """
-
+        print 'RUN', hex(offset)
         if offset is None:
             offset = getattr(cpu, self.ir_arch.pc.name)
 

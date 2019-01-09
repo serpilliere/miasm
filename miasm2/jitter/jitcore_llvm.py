@@ -115,7 +115,9 @@ class JitCore_LLVM(jitcore.JitCore):
 
         else:
             # The cache file exists: function can be loaded from cache
+            print 'PTR'
             ptr = self.context.get_ptr_from_cache(fname_out, self.FUNCNAME)
+            print ptr
 
         # Store a pointer on the function jitted code
         loc_key = block.loc_key

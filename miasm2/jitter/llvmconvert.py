@@ -227,24 +227,32 @@ class LLVMContext_JIT(LLVMContext):
                 llvm.llvm_version_info[1],
             )
             ,
-            "libLLVM-%d" % llvm.llvm_version_info[0]
+            "libLLVM-%d" % llvm.llvm_version_info[0],
+            r"c:\Program files\llvm\lib\clang\7.0.0\lib\windows\clang_rt.builtins-x86_64.lib"
         ]
+        print 'LOAD DYN'
         for name in names:
+            print 'XX', name
             try:
                 # On Windows, no need to add ".dll"
                 self.add_shared_library(name)
+                print 'LOAD OK', name
                 break
             except RuntimeError:
                 pass
             try:
                 # On Linux, ".so" is needed
                 self.add_shared_library("%s.so" % name)
+                print 'LOAD OK', name
                 break
             except RuntimeError:
                 pass
-
+        else:
+            print 'NO LOAD!!!'
+            fds
         # Load additional libraries
         for lib_fname in self.library_filenames:
+            print 'XXX', lib_fname
             self.add_shared_library(lib_fname)
 
     def new_module(self, name="mod"):

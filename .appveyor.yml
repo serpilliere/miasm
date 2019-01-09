@@ -12,17 +12,18 @@ environment:
       PLATFORM_TOOLSET: v141
       PYTHON: c:\Python27
       Z3_PKG_NAME: z3-4.6.0-x86-win
-
-    - platform: x64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM_TOOLSET: v141
-      PYTHON: c:\Python27-x64
-      Z3_INCLUDE_DIRS: c:\projects\triton\build\z3-4.6.0-x64-win\include
-      Z3_LIBRARIES: c:\projects\triton\build\z3-4.6.0-x64-win\bin\libz3.lib
-      Z3_PKG_NAME: z3-4.6.0-x64-win
-
-      # on_finish:
-      #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
+#    - platform: x64
+#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#      PLATFORM_TOOLSET: v141
+#      PYTHON: c:\Python27-x64
+#      Z3_INCLUDE_DIRS: c:\projects\triton\build\z3-4.6.0-x64-win\include
+#      Z3_LIBRARIES: c:\projects\triton\build\z3-4.6.0-x64-win\bin\libz3.lib
+#      Z3_PKG_NAME: z3-4.6.0-x64-win
+#
+on_finish:
+ - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
 
 install:
   - cmd: cd c:\projects\miasm
@@ -38,7 +39,7 @@ install:
 
 build_script:
   - cmd: if "%platform%"=="Win32" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
-  - cmd: if "%platform%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+#  - cmd: if "%platform%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
   - cmd: cd c:\projects\miasm
   - "%PYTHON%\\python.exe setup.py build"
   - "%PYTHON%\\python.exe setup.py install"
@@ -46,14 +47,15 @@ build_script:
 test_script:
   - cmd: set PYTHONPATH=c:\projects\miasm\build\%Z3_PKG_NAME%\bin\python
   - cmd: set PATH=c:\projects\miasm\build\%Z3_PKG_NAME%\bin;%PATH%
-  - cmd: cd c:\projects\miasm\test
-  - "%PYTHON%\\python.exe test_all.py"
+  - cmd: cd c:\projects\miasm\test\arch\x86\qemu
+#  - "%PYTHON%\\python.exe testqemu.py test-i386 test_rcl expected\\test_rcl.exp --jitter llvm"
+  - "%PYTHON%\\python.exe testqemu64.py test-x86_64 test_rcr expected_x86_64\\test_rcr.exp --jitter llvm -z -b"
 
 after_test:
   - cmd: chdir
   - cmd: set plat
   - cmd: if "%platform%"=="Win32" 7z a -t7z ..\miasm.x86.release.7z c:\projects\miasm\build\*lib*
-  - cmd: if "%platform%"=="X64" 7z a -t7z ..\miasm.x64.release.7z c:\projects\miasm\build\*lib*
+#  - cmd: if "%platform%"=="X64" 7z a -t7z ..\miasm.x64.release.7z c:\projects\miasm\build\*lib*
 
 artifacts:
   - path: miasm.*.7z
