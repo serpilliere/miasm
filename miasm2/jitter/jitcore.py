@@ -54,7 +54,7 @@ class JitCore(object):
         self.log_mn = False
         self.log_regs = False
         self.log_newbloc = False
-        self.options = {"jit_maxline": 50,  # Maximum number of line jitted
+        self.options = {"jit_maxline": 1,  # Maximum number of line jitted
                         "max_exec_per_call": 0 # 0 means no limit
                         }
 

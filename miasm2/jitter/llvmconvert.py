@@ -249,7 +249,6 @@ class LLVMContext_JIT(LLVMContext):
                 pass
         else:
             print 'NO LOAD!!!'
-            fds
         # Load additional libraries
         for lib_fname in self.library_filenames:
             print 'XXX', lib_fname
