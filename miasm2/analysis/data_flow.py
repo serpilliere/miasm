@@ -587,6 +587,16 @@ class SSADefUse(DiGraph):
         return graph
 
 
+def irblock_has_phi(irblock):
+    """
+    Return True if @irblock has Phi assignments
+    @irblock: IRBlock instance
+    """
+    if not irblock.assignblks:
+        return False
+    for src in irblock[0].itervalues():
+        return src.is_op('Phi')
+    return False
 
 
 def expr_test_visit(expr, test):
@@ -1212,3 +1222,47 @@ class DiGraphLivenessIRA(DiGraphLiveness):
             var_out = ir_arch_a.get_out_regs(irblock)
             irblock_liveness = self.blocks[node]
             irblock_liveness.infos[-1].var_out = var_out
+
+
+def get_var_assignment_src(ircfg, node, variables):
+    """
+    Return the variable of @variables which is written by the irblock at @node
+    @node: Location
+    @variables: a set of variable to test
+    """
+    irblock = ircfg.blocks[node]
+    for assignblk in irblock:
+        result = set(assignblk).intersection(variables)
+        if not result:
+            continue
+        assert len(result) == 1
+        return list(result)[0]
+    return None
+
+
+def get_phi_sources_parent_block(ircfg, loc_key, sources):
+    """
+    Return a dictionary linking a variable to it's direct parent label
+    which belong to a path which affects the node.
+    @loc_key: the starting node
+    @sources: set of variables to resolve
+    """
+    source_to_parent = {}
+    for parent in ircfg.predecessors(loc_key):
+        done = set()
+        todo = set([parent])
+        found = False
+        while todo:
+            node = todo.pop()
+            if node in done:
+                continue
+            done.add(node)
+            ret = get_var_assignment_src(ircfg, node, sources)
+            if ret:
+                source_to_parent.setdefault(ret, set()).add(parent)
+                found = True
+                break
+            for pred in ircfg.predecessors(node):
+                todo.add(pred)
+        assert found
+    return source_to_parent

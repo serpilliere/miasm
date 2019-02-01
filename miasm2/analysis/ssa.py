@@ -1,6 +1,8 @@
 from collections import deque
 
-from miasm2.analysis.data_flow import DiGraphLivenessIRA, remove_empty_assignblks
+from miasm2.analysis.data_flow import DiGraphLivenessIRA, \
+    remove_empty_assignblks, get_phi_sources_parent_block, \
+    irblock_has_phi
 from miasm2.expression.expression import ExprId, ExprAssign, ExprOp, get_expr_ids
 from miasm2.ir.ir import AssignBlock, IRBlock
 
@@ -617,18 +619,6 @@ class SSADiGraph(SSA):
             self.expressions[newname] = var
 
 
-def irblock_has_phi(irblock):
-    """
-    Return True if @irblock has Phi assignments
-    @irblock: IRBlock instance
-    """
-    if not irblock.assignblks:
-        return False
-    for src in irblock[0].itervalues():
-        return src.is_op('Phi')
-    return False
-
-
 class Varinfo(object):
     """Store liveness information for a variable"""
     __slots__ = ["live_index", "loc_key", "index"]
@@ -637,50 +627,6 @@ class Varinfo(object):
         self.live_index = live_index
         self.loc_key = loc_key
         self.index = index
-
-
-def get_var_assignment_src(ircfg, node, variables):
-    """
-    Return the variable of @variables which is written by the irblock at @node
-    @node: Location
-    @variables: a set of variable to test
-    """
-    irblock = ircfg.blocks[node]
-    for assignblk in irblock:
-        result = set(assignblk).intersection(variables)
-        if not result:
-            continue
-        assert len(result) == 1
-        return list(result)[0]
-    return None
-
-
-def get_phi_sources_parent_block(ircfg, loc_key, sources):
-    """
-    Return a dictionary linking a variable to it's direct parent label
-    which belong to a path which affects the node.
-    @loc_key: the starting node
-    @sources: set of variables to resolve
-    """
-    source_to_parent = {}
-    for parent in ircfg.predecessors(loc_key):
-        done = set()
-        todo = set([parent])
-        found = False
-        while todo:
-            node = todo.pop()
-            if node in done:
-                continue
-            done.add(node)
-            ret = get_var_assignment_src(ircfg, node, sources)
-            if ret:
-                source_to_parent.setdefault(ret, set()).add(parent)
-                found = True
-                break
-            for pred in ircfg.predecessors(node):
-                todo.add(pred)
-        assert found
-    return source_to_parent
 
 
 class UnSSADiGraph(object):
