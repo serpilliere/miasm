@@ -348,6 +348,8 @@ def _test_jmp_only(ircfg, loc_key):
     items = dict(irblock.assignblks[0]).items()
     if len(items) != 1:
         return None
+    if len(ircfg.successors(loc_key)) != 1:
+        return None
     dst, src = items[0]
     assert dst.is_id("IRDst")
     if not src.is_loc():
@@ -397,7 +399,6 @@ def _remove_to_son(ircfg, loc_key, son_loc_key):
 
     # Unlink block destinations
     ircfg.del_edge(loc_key, son_loc_key)
-    del ircfg.blocks[loc_key]
 
     replace_dct = {
         ExprLoc(loc_key, ircfg.IRDst.size):ExprLoc(son_loc_key, ircfg.IRDst.size)
@@ -434,7 +435,6 @@ def _remove_to_parent(ircfg, loc_key, son_loc_key):
 
     ircfg.blocks[son_loc_key] = new_irblock
 
-    del ircfg.blocks[son_loc_key]
     ircfg.add_irblock(new_irblock)
 
     replace_dct = {
