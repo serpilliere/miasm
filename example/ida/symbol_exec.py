@@ -1,7 +1,12 @@
+from __future__ import print_function
 import operator
+
+from future.utils import viewitems
 
 import idaapi
 import idc
+
+
 from miasm2.expression.expression_helper import Variables_Identifier
 from miasm2.expression.expression import ExprAssign
 
@@ -50,7 +55,7 @@ class symbolicexec_t(idaapi.simplecustviewer_t):
         expanded = Variables_Identifier(element[1],
                                         var_prefix="%s_v" % element[0])
         self.line2eq = self.line2eq[0:linenum] + \
-            expanded.vars.items() + \
+            list(viewitems(expanded.vars) + \
             [(element[0], expanded.equation)] + \
             self.line2eq[linenum + 1:]
 
@@ -75,7 +80,7 @@ class symbolicexec_t(idaapi.simplecustviewer_t):
 
         self.machine = machine
         self.loc_db = loc_db
-        self.line2eq = sorted(equations.items(), key=operator.itemgetter(0))
+        self.line2eq = sorted(list(viewitems(equations)), key=operator.itemgetter(0))
         self.lines_expanded = set()
 
         self.print_lines()
@@ -144,7 +149,7 @@ def symbolic_exec():
     ira = machine.ira(loc_db=mdis.loc_db)
     ircfg = ira.new_ircfg_from_asmcfg(asmcfg)
 
-    print "Run symbolic execution..."
+    print("Run symbolic execution...")
     sb = SymbolicExecutionEngine(ira, machine.mn.regs.regs_init)
     sb.run_at(ircfg, start)
     modified = {}
@@ -192,7 +197,7 @@ if __name__ == '__main__':
     idaapi.CompileLine('static key_F3() { RunPythonStatement("symbolic_exec()"); }')
     idc.AddHotkey("F3", "key_F3")
 
-    print "=" * 50
-    print """Available commands:
+    print("=" * 50)
+    print("""Available commands:
     symbolic_exec() - F3: Symbolic execution of current selection
-    """
+    """)

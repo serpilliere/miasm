@@ -4,8 +4,210 @@ import inspect
 import ast
 import re
 
+from future.utils import PY3
+
 import miasm2.expression.expression as m2_expr
 from miasm2.ir.ir import IRBlock, AssignBlock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import argparse
+import ast
+import contextlib
+
+AST = (ast.AST,)
+expr_context = (ast.expr_context,)
+
+try:  # pragma: no cover (with typed-ast)
+    from typed_ast import ast27
+    from typed_ast import ast3
+except ImportError:  # pragma: no cover (without typed-ast)
+    typed_support = False
+else:  # pragma: no cover (with typed-ast)
+    AST += (ast27.AST, ast3.AST)
+    expr_context += (ast27.expr_context, ast3.expr_context)
+    typed_support = True
+
+
+def _is_sub_node(node):
+    return isinstance(node, AST) and not isinstance(node, expr_context)
+
+
+def _is_leaf(node):
+    for field in node._fields:
+        attr = getattr(node, field)
+        if _is_sub_node(attr):
+            return False
+        elif isinstance(attr, (list, tuple)):
+            for val in attr:
+                if _is_sub_node(val):
+                    return False
+    else:
+        return True
+
+
+def _fields(n, show_offsets=True):
+    if show_offsets and hasattr(n, 'lineno') and hasattr(n, 'col_offset'):
+        return ('lineno', 'col_offset') + n._fields
+    else:
+        return n._fields
+
+
+def _leaf(node, show_offsets=True):
+    if isinstance(node, AST):
+        return '{}({})'.format(
+            type(node).__name__,
+            ', '.join(
+                '{}={}'.format(
+                    field,
+                    _leaf(getattr(node, field), show_offsets=show_offsets),
+                )
+                for field in _fields(node, show_offsets=show_offsets)
+            ),
+        )
+    elif isinstance(node, list):
+        return '[{}]'.format(
+            ', '.join(_leaf(x, show_offsets=show_offsets) for x in node),
+        )
+    else:
+        return repr(node)
+
+
+def pformat(node, indent='    ', show_offsets=True, _indent=0):
+    if node is None:  # pragma: no cover (py35+ unpacking in literals)
+        return repr(node)
+    elif isinstance(node, str):  # pragma: no cover (ast27 typed-ast args)
+        return repr(node)
+    elif _is_leaf(node):
+        return _leaf(node, show_offsets=show_offsets)
+    else:
+        class state:
+            indent = _indent
+
+        @contextlib.contextmanager
+        def indented():
+            state.indent += 1
+            yield
+            state.indent -= 1
+
+        def indentstr():
+            return state.indent * indent
+
+        def _pformat(el, _indent=0):
+            return pformat(
+                el, indent=indent, show_offsets=show_offsets,
+                _indent=_indent,
+            )
+
+        out = type(node).__name__ + '(\n'
+        with indented():
+            for field in _fields(node, show_offsets=show_offsets):
+                attr = getattr(node, field)
+                if attr == []:
+                    representation = '[]'
+                elif (
+                        isinstance(attr, list) and
+                        len(attr) == 1 and
+                        isinstance(attr[0], AST) and
+                        _is_leaf(attr[0])
+                ):
+                    representation = '[{}]'.format(_pformat(attr[0]))
+                elif isinstance(attr, list):
+                    representation = '[\n'
+                    with indented():
+                        for el in attr:
+                            representation += '{}{},\n'.format(
+                                indentstr(), _pformat(el, state.indent),
+                            )
+                    representation += indentstr() + ']'
+                elif isinstance(attr, AST):
+                    representation = _pformat(attr, state.indent)
+                else:
+                    representation = repr(attr)
+                out += '{}{}={},\n'.format(indentstr(), field, representation)
+        out += indentstr() + ')'
+        return out
+
+
+def pprint(*args, **kwargs):
+    print(pformat(*args, **kwargs))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class MiasmTransformer(ast.NodeTransformer):
@@ -30,7 +232,6 @@ class MiasmTransformer(ast.NodeTransformer):
 
         # Recursive visit
         node = self.generic_visit(node)
-
         if isinstance(node.func, ast.Name):
             # iX(Y) -> ExprInt(Y, X)
             fc_name = node.func.id
@@ -109,6 +310,17 @@ class MiasmTransformer(ast.NodeTransformer):
                                keywords=[],
                                starargs=None,
                                kwargs=None)
+
+if PY3:
+    def get_arg_name(name):
+        return name.arg
+    def gen_arg(name, ctx):
+        return ast.arg(arg=name, ctx=ctx)
+else:
+    def get_arg_name(name):
+        return name.id
+    def gen_arg(name, ctx):
+        return ast.Name(id=name, ctx=ctx)
 
 
 class SemBuilder(object):
@@ -300,7 +512,7 @@ class SemBuilder(object):
         # Get the function AST
         parsed = ast.parse(inspect.getsource(func))
         fc_ast = parsed.body[0]
-        argument_names = [name.id for name in fc_ast.args.args]
+        argument_names = [get_arg_name(name) for name in fc_ast.args.args]
 
         # Init local cache
         self._local_ctx = {}
@@ -309,8 +521,10 @@ class SemBuilder(object):
         blocks, body = self._parse_body(fc_ast.body, argument_names)
 
         # Build the new function
-        fc_ast.args.args[0:0] = [ast.Name(id='ir', ctx=ast.Param()),
-                                 ast.Name(id='instr', ctx=ast.Param())]
+        fc_ast.args.args[0:0] = [
+            gen_arg('ir', ast.Param()),
+            gen_arg('instr', ast.Param())
+        ]
         cur_instr = blocks[0][0]
         if len(blocks[-1][0]) == 0:
             ## Last block can be empty

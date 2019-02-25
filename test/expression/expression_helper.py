@@ -1,6 +1,7 @@
 #! /usr/bin/env python2
 #-*- coding:utf-8 -*-
 
+from __future__ import print_function
 import unittest
 
 
@@ -25,13 +26,13 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         vi = Variables_Identifier(exprf)
 
         # Use __str__
-        print vi
+        print(vi)
 
         # Test the result
         new_expr = vi.equation
 
         ## Force replace in the variable dependency order
-        for var_id, var_value in reversed(vi.vars.items()):
+        for var_id, var_value in reversed(list(vi.vars.items())):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(exprf, new_expr)
 
@@ -39,12 +40,12 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         vi = Variables_Identifier(exprf, var_prefix="prefix_v")
 
         ## Use __str__
-        print vi
+        print(vi)
 
         ## Test the result
         new_expr = vi.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(vi.vars.items()):
+        for var_id, var_value in reversed(list(vi.vars.items())):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(exprf, new_expr)
 
@@ -55,7 +56,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         ## Test the result
         new_expr = vi2.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(vi2.vars.items()):
+        for var_id, var_value in reversed(list(vi2.vars.items())):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(vi.equation, new_expr)
 
@@ -72,7 +73,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         ## Test the result
         new_expr = vi2.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(vi2.vars.items()):
+        for var_id, var_value in reversed(list(vi2.vars.items())):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(vi.equation, new_expr)
 

@@ -68,7 +68,7 @@ class AstMem(AstNode):
     """
     def __init__(self, ptr, size):
         assert isinstance(ptr, AstNode)
-        assert isinstance(size, (int, long))
+        assert isinstance(size, int)
         self.ptr = ptr
         self.size = size
 
