@@ -27,12 +27,7 @@ log_asmblock.setLevel(logging.WARNING)
 
 
 def is_int(a):
-    return (
-        isinstance(a, int_types) or
-        isinstance(a, moduint) or
-        isinstance(a, modint)
-    )
-
+    return isinstance(a, (modint, moduint, int_types))
 
 
 class AsmRaw(object):

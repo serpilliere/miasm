@@ -2,6 +2,8 @@ from __future__ import print_function
 from builtins import map
 from pdb import pm
 
+from future.utils import viewitems
+
 from miasm2.core.utils import decode_hex
 from miasm2.analysis.machine import Machine
 from miasm2.analysis.binary import Container
@@ -325,7 +327,7 @@ matcher += bbl0 >> bblB
 solutions = list(matcher.match(asmcfg))
 assert len(solutions) == 1
 solution = solutions.pop()
-for jbbl, label in solution.items():
+for jbbl, label in viewitems(solution):
     offset = mdis.loc_db.get_location_offset(label)
     assert offset == int(jbbl._name, 16)
 

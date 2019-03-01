@@ -6,6 +6,7 @@ Regression test for objc
 """
 from __future__ import print_function
 
+from future.utils import viewitems
 from past.builtins import cmp
 from builtins import str
 from miasm2.expression.expression import ExprInt, ExprId, ExprMem
@@ -150,14 +151,14 @@ types_ast.add_c_decl(text_2)
 
 types_mngr = CTypesManagerNotPacked(types_ast, base_types)
 
-for type_id, type_desc in types_mngr.types_ast._types.items():
+for type_id, type_desc in viewitems(types_mngr.types_ast._types):
     print(type_id)
     obj = types_mngr.get_objc(type_id)
     print(obj)
     print(repr(obj))
     types_mngr.check_objc(obj)
 
-for type_id, type_desc in types_mngr.types_ast._typedefs.items():
+for type_id, type_desc in viewitems(types_mngr.types_ast._typedefs):
     print(type_id)
     obj = types_mngr.get_objc(type_id)
     print(obj)

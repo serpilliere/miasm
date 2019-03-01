@@ -5,7 +5,7 @@ import os
 import logging
 from argparse import ArgumentParser
 
-from future.utils import viewitems
+from future.utils import viewitems, viewvalues
 
 from miasm2.core.utils import force_bytes
 from miasm2.analysis.machine import Machine
@@ -230,7 +230,7 @@ class OS_Win(OS):
             )
 
             # Patch libs imports
-            for pe in self.name2module.values():
+            for pe in viewvalues(self.name2module):
                 preload_pe(self.jitter.vm, pe, libs)
 
         if self.options.dependencies:

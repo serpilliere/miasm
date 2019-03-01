@@ -107,7 +107,7 @@ new_dll = sb.libs.gen_new_lib(sb.pe)
 logging.info(new_dll)
 sb.pe.DirImport.impdesc = []
 sb.pe.DirImport.add_dlldesc(new_dll)
-s_myimp = sb.pe.SHList.add_section(name=b"myimp", rawsize=len(sb.pe.DirImport))
+s_myimp = sb.pe.SHList.add_section(name="myimp", rawsize=len(sb.pe.DirImport))
 logging.info(repr(sb.pe.SHList))
 sb.pe.DirImport.set_rva(s_myimp.addr)
 

@@ -1621,7 +1621,7 @@ data_test_name = {'TST': 8, 'TEQ': 9, 'CMP': 10, 'CMN': 11}
 
 data_name = {}
 for i, n in enumerate(op_list):
-    if n in list(data_mov_name.keys()) + list(data_test_name.keys()):
+    if n in list(data_mov_name) + list(data_test_name):
         continue
     data_name[n] = i
 bs_data_name = bs_name(l=4, name=data_name)

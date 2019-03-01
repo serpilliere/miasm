@@ -30,7 +30,7 @@ from io import StringIO
 import time
 import datetime
 
-from future.utils import PY3
+from future.utils import PY3, viewitems
 
 try:
     from Crypto.Hash import MD5, SHA
@@ -83,7 +83,7 @@ ACCESS_DICT = {0x0: 0,
                0x100: 0
                }
 
-ACCESS_DICT_INV = dict((x[1], x[0]) for x in ACCESS_DICT.items())
+ACCESS_DICT_INV = dict((x[1], x[0]) for x in viewitems(ACCESS_DICT))
 
 
 class whandle(object):
@@ -112,7 +112,7 @@ class handle_generator(object):
 
     def __repr__(self):
         out = '<%r\n' % self.__class__.__name__
-        ks = list(self.all_handles.keys())
+        ks = list(self.all_handles)
         ks.sort()
 
         for k in ks:
@@ -815,9 +815,13 @@ def kernel32_GetModuleFileName(jitter, funcname, set_str):
     if args.hmodule in [0, winobjs.hcurmodule]:
         p = winobjs.module_path[:]
     elif (winobjs.runtime_dll and
-          args.hmodule in list(winobjs.runtime_dll.name2off.values())):
-        name_inv = dict([(x[1], x[0])
-                        for x in list(winobjs.runtime_dll.name2off.items())])
+          args.hmodule in viewvalues(winobjs.runtime_dll.name2off)):
+        name_inv = dict(
+            [
+                (x[1], x[0])
+                for x in viewitems(winobjs.runtime_dll.name2off)
+            ]
+        )
         p = name_inv[args.hmodule]
     else:
         log.warning(('Unknown module 0x%x.' +
@@ -1683,7 +1687,7 @@ def kernel32_WaitForSingleObject(jitter):
         if args.dwms and args.dwms + t_start > time.time() * 1000:
             ret = 0x102
             break
-        for key, value in winobjs.events_pool.items():
+        for key, value in viewitems(winobjs.events_pool):
             if key != args.handle:
                 continue
             found = True
@@ -2532,7 +2536,7 @@ def kernel32_VirtualQuery(jitter):
 
     all_mem = jitter.vm.get_all_memory()
     found = None
-    for basead, m in all_mem.items():
+    for basead, m in viewitems(all_mem):
         if basead <= args.ad < basead + m['size']:
             found = args.ad, m
             break
@@ -2828,7 +2832,7 @@ class win32_find_data(object):
     alternamefilename = ""
 
     def __init__(self, **kargs):
-        for k, v in list(kargs.items()):
+        for k, v in viewitems(kargs):
             setattr(self, k, v)
 
     def toStruct(self):

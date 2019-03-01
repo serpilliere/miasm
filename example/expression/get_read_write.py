@@ -27,7 +27,7 @@ for lbl, irblock in viewitems(ircfg.blocks):
     print(irblock)
     for assignblk in irblock:
         rw = assignblk.get_rw()
-        for dst, reads in rw.items():
+        for dst, reads in viewitems(rw):
             print('read:   ', [str(x) for x in reads])
             print('written:', dst)
             print()

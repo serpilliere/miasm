@@ -1,4 +1,3 @@
-from __future__ import division
 from __future__ import print_function
 import logging
 from argparse import ArgumentParser
@@ -321,7 +320,7 @@ if args.propagexpr:
 
         """
         try:
-            _ = bs.getbytes(addr, size//8)
+            _ = bs.getbytes(addr, size // 8)
         except IOError:
             return False
         return True

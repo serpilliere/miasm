@@ -201,7 +201,8 @@ class SymbExecCTypeFix(SymbExecCType):
                 for c_str, c_type in self.chandler.expr_to_c_and_types(expr, self.symbols):
                     expr = self.cst_propag_link.get((irb.loc_key, index), {}).get(expr, expr)
                     offset2cmt.setdefault(instr.offset, set()).add(
-                        "\n%s: %s\n%s" % (expr, c_str, c_type))
+                        "\n%s: %s\n%s" % (expr, c_str, c_type)
+                    )
             self.eval_updt_assignblk(assignblk)
         for offset, value in viewitems(offset2cmt):
             idc.MakeComm(offset, '\n'.join(value))

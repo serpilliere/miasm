@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+from future.utils import viewvalues
 from miasm2.analysis.binary import Container
 from miasm2.analysis.machine import Machine
 
@@ -31,7 +32,7 @@ ir_arch_analysis = machine.ira(mdis.loc_db)
 ircfg_analysis = ir_arch_analysis.new_ircfg_from_asmcfg(asmcfg)
 
 # Display each IR basic blocks
-for irblock in list(ircfg_analysis.blocks.values()):
+for irblock in viewvalues(ircfg_analysis.blocks):
     print(irblock)
 
 # Output ir control flow graph in a dot file

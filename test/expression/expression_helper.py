@@ -2,6 +2,8 @@
 #-*- coding:utf-8 -*-
 
 from __future__ import print_function
+
+from future.utils import viewitems
 import unittest
 
 
@@ -32,7 +34,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         new_expr = vi.equation
 
         ## Force replace in the variable dependency order
-        for var_id, var_value in reversed(list(vi.vars.items())):
+        for var_id, var_value in reversed(list(viewitems(vi.vars))):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(exprf, new_expr)
 
@@ -45,7 +47,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         ## Test the result
         new_expr = vi.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(list(vi.vars.items())):
+        for var_id, var_value in reversed(list(viewitems(vi.vars))):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(exprf, new_expr)
 
@@ -56,7 +58,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         ## Test the result
         new_expr = vi2.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(list(vi2.vars.items())):
+        for var_id, var_value in reversed(list(viewitems(vi2.vars))):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(vi.equation, new_expr)
 
@@ -73,7 +75,7 @@ class TestExpressionExpressionHelper(unittest.TestCase):
         ## Test the result
         new_expr = vi2.equation
         ### Force replace in the variable dependency order
-        for var_id, var_value in reversed(list(vi2.vars.items())):
+        for var_id, var_value in reversed(list(viewitems(vi2.vars))):
             new_expr = new_expr.replace_expr({var_id: var_value})
         self.assertEqual(vi.equation, new_expr)
 

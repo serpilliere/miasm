@@ -80,7 +80,7 @@ class symbolicexec_t(idaapi.simplecustviewer_t):
 
         self.machine = machine
         self.loc_db = loc_db
-        self.line2eq = sorted(list(viewitems(equations)), key=operator.itemgetter(0))
+        self.line2eq = sorted(viewitems(equations), key=operator.itemgetter(0))
         self.lines_expanded = set()
 
         self.print_lines()

@@ -1,4 +1,3 @@
-from builtins import str
 from argparse import ArgumentParser
 import logging
 import re

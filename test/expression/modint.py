@@ -1,6 +1,4 @@
-from __future__ import division
 from __future__ import print_function
-from builtins import hex
 from miasm2.expression.modint import *
 
 a = uint8(0x42)

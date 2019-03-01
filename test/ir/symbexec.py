@@ -285,7 +285,7 @@ class TestSymbExec(unittest.TestCase):
         assert sb.symbols.symbols_mem.contains_partial(ExprMem(ExprInt(0xFFFFFFFE, 32), 32))
         assert not sb.symbols.symbols_mem.contains_partial(ExprMem(ExprInt(0xFFFFFFFF, 32), 8))
 
-        assert list(sb_addr8.symbols.keys()) == [ExprMem(ExprInt(0x5, 5), 256)]
+        assert list(sb_addr8.symbols) == [ExprMem(ExprInt(0x5, 5), 256)]
 
 
 if __name__ == '__main__':

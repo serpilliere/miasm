@@ -1,9 +1,7 @@
-from __future__ import division
 from __future__ import print_function
-from builtins import hex
-from builtins import str
 import os
 import tempfile
+from builtins import int as int_types
 
 from future.utils import viewitems, viewvalues
 
@@ -96,9 +94,9 @@ def label_init(self, name="", offset=None):
 
 
 def label_str(self):
-    if isinstance(self.offset, int):
+    if isinstance(self.offset, int_types):
         return "%s:0x%x" % (self.name, self.offset)
-    return "%s:%s" % (self.name, str(self.offset))
+    return "%s:%s" % (self.name, self.offset)
 
 
 def color_irblock(irblock, ir_arch):

@@ -819,10 +819,10 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("-t", "--omit-tags", help="Omit tests based on tags \
 (tag1,tag2). Available tags are %s. \
-By default, no tag is omitted." % ", ".join(list(TAGS.keys())), default="")
+By default, no tag is omitted." % ", ".join(list(TAGS)), default="")
     parser.add_argument("-o", "--only-tags", help="Restrict to tests based on tags \
 (tag1,tag2). Available tags are %s. \
-By default, all tag are considered." % ", ".join(list(TAGS.keys())), default="")
+By default, all tag are considered." % ", ".join(list(TAGS)), default="")
     parser.add_argument("-n", "--do-not-clean",
                         help="Do not clean tests products", action="store_true")
     args = parser.parse_args()

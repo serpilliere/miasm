@@ -2,6 +2,7 @@ from __future__ import print_function
 from builtins import map
 from builtins import range
 import cmd
+from future.utils import viewitems
 
 from miasm2.core.utils import hexdump
 from miasm2.core.interval import interval
@@ -50,17 +51,19 @@ class DebugBreakpointMemory(DebugBreakpoint):
 
     def __str__(self):
         bp_type = ""
-        for k, v in list(self.type2str.items()):
+        for k, v in viewitems(self.type2str):
             if k & self.access_type != 0:
                 bp_type += v
-        return "Memory BP @0x%08x, Size 0x%08x, Type %s" % (self.addr,
-                                                            self.size,
-                                                            bp_type)
+        return "Memory BP @0x%08x, Size 0x%08x, Type %s" % (
+            self.addr,
+            self.size,
+            bp_type
+        )
 
     @classmethod
     def get_access_type(cls, read=False, write=False):
         value = 0
-        for k, v in list(cls.type2str.items()):
+        for k, v in viewitems(cls.type2str):
             if v == "R" and read is True:
                 value += k
             if v == "W" and write is True:
@@ -263,14 +266,14 @@ class DebugCmd(cmd.Cmd, object):
         # Display settings
         title1 = "Registers"
         title2 = "Values"
-        max_name_len = max(map(len, list(regs.keys()) + [title1]))
+        max_name_len = max(map(len, list(regs) + [title1]))
 
         # Print value table
         s = "%s%s    |    %s" % (
             title1, " " * (max_name_len - len(title1)), title2)
         print(s)
         print("-" * len(s))
-        for name, value in sorted(list(regs.items()), key=lambda x: x[0]):
+        for name, value in sorted(viewitems(regs), key=lambda x: x[0]):
             print(
                 "%s%s    |    %s" % (
                     name,
@@ -404,7 +407,7 @@ class DebugCmd(cmd.Cmd, object):
         if arg.startswith("d"):
             # Display
             self.update_display_mode()
-            for k, v in list(self.display_mode.items()):
+            for k, v in viewitems(self.display_mode):
                 print("%s\t\t%s" % (k, v))
 
         if arg.startswith("w"):

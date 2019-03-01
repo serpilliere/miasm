@@ -36,10 +36,11 @@ else:
 assert assignblk1.get_r() == set([id_b])
 assert assignblk1.get_w() == set([id_a])
 assert assignblk1.get_rw() == {id_a: set([id_b])}
-assert list(assignblk1.keys()) == [id_a]
+assert list(assignblk1) == [id_a]
 assert dict(assignblk1) == {id_a: id_b}
 assert assignblk1[id_a] == id_b
 assert list(viewitems(assignblk1)) == list(viewitems(assignblk1))
+assert set(assignblk1.iteritems()) == set(assignblk1.items())
 
 ## Simplify
 assignblk3 = AssignBlock({id_a: id_b - id_b})

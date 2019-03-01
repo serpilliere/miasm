@@ -14,6 +14,7 @@ import platform
 from collections import namedtuple
 from pdb import pm
 from tempfile import NamedTemporaryFile
+from future.utils import viewitems
 
 from miasm2.core.utils import int_to_byte
 from miasm2.jitter.csts import PAGE_READ, PAGE_WRITE
@@ -285,7 +286,7 @@ while todo:
             break
 
     finfo = FILE_to_info_symb[FILE_stream]
-    for sol_ident, model in dse.new_solutions.items():
+    for sol_ident, model in viewitems(dse.new_solutions):
         # Build the file corresponding to solution in 'model'
 
         out = []

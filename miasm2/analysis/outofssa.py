@@ -365,7 +365,7 @@ class UnSSADiGraph(object):
 
         # Elect representative for merge sets
         merge_set_to_name = {}
-        for merge_set in self.merge_state.values():
+        for merge_set in viewvalues(self.merge_state):
             frozen_merge_set = frozenset(merge_set)
             merge_sets.add(frozen_merge_set)
             var_name = self.get_best_merge_set_name(merge_set)
@@ -386,7 +386,7 @@ class UnSSADiGraph(object):
         @ircfg: IRDiGraph instance
         """
 
-        for irblock in list(self.ssa.graph.blocks.values()):
+        for irblock in list(viewvalues(self.ssa.graph.blocks)):
             assignblks = list(irblock)
             out = {}
             for dst, src in viewitems(assignblks[0]):
@@ -401,7 +401,7 @@ class UnSSADiGraph(object):
         """
         Remove trivial expressions (a=a) in the current graph
         """
-        for irblock in list(self.ssa.graph.blocks.values()):
+        for irblock in list(viewitems(self.ssa.graph.blocks)):
             assignblks = list(irblock)
             for i, assignblk in enumerate(assignblks):
                 out = {}

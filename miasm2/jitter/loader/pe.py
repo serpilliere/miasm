@@ -297,7 +297,7 @@ def vm2pe(myjit, fname, libs=None, e_orig=None,
 
     mye.NThdr.ImageBase = img_base
     all_mem = myjit.vm.get_all_memory()
-    addrs = list(all_mem.keys())
+    addrs = list(all_mem)
     addrs.sort()
     mye.Opthdr.AddressOfEntryPoint = mye.virt2rva(myjit.pc)
     first = True
@@ -319,8 +319,6 @@ def vm2pe(myjit, fname, libs=None, e_orig=None,
         first = False
     if libs:
         if added_funcs is not None:
-            # name_inv = dict([(x[1], x[0]) for x in libs.name2off.items()])
-
             for addr, funcaddr in added_funcs:
                 libbase, dllname = libs.fad2info[funcaddr]
                 libs.lib_get_add_func(libbase, dllname, addr)
@@ -454,7 +452,7 @@ class libimp_pe(libimp):
 
             # Filter available addresses according to @filter_import
             all_ads = [
-                addr for addr in list(out_ads.keys()) if filter_import(target_pe, addr)
+                addr for addr in list(out_ads) if filter_import(target_pe, addr)
             ]
 
             if not all_ads:
