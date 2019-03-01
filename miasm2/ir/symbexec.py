@@ -75,7 +75,7 @@ class SymbolicState(StateEngine):
 
         symb_a = self.symbols
         symb_b = other.symbols
-        intersection = set(symb_a).intersection(list(symb_b))
+        intersection = set(symb_a).intersection(set(symb_b))
         out = {}
         for dst in intersection:
             if symb_a[dst] == symb_b[dst]:

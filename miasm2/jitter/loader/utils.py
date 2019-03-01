@@ -3,6 +3,8 @@ import logging
 
 from future.utils import viewitems, viewvalues
 
+from miasm2.core.utils import force_bytes
+
 log = logging.getLogger('loader_common')
 hnd = logging.StreamHandler()
 hnd.setFormatter(logging.Formatter("[%(levelname)s]: %(message)s"))
@@ -11,19 +13,12 @@ log.setLevel(logging.INFO)
 
 
 def canon_libname_libfunc(libname, libfunc):
-    try:
-        libname = libname.encode()
-    except AttributeError:
-        pass
-
+    libname = force_bytes(libname)
     dn = libname.split(b'.')[0]
     if isinstance(libfunc, int_types):
         return str(dn), libfunc
     else:
-        try:
-            libfunc = libfunc.encode()
-        except AttributeError:
-            pass
+        libfunc = force_bytes(libfunc)
         return b"%s_%s" % (dn, libfunc)
 
 
@@ -42,10 +37,7 @@ class libimp(object):
         self.fake_libs = set()
 
     def lib_get_add_base(self, name):
-        try:
-            name = name.encode()
-        except AttributeError:
-            pass
+        name = force_bytes(name)
         name = name.lower().strip(b' ')
         if not b"." in name:
             log.debug('warning adding .dll to modulename')

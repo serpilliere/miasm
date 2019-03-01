@@ -609,8 +609,10 @@ def possible_values(expr):
     elif isinstance(expr, m2_expr.ExprCompose):
         # Generate each possibility for sub-argument, associated with the start
         # and stop bit
-        consvals_args = [[x for x in possible_values(arg)]
-                         for arg in expr.args]
+        consvals_args = [
+            list(possible_values(arg))
+            for arg in expr.args
+        ]
         for consvals_possibility in itertools.product(*consvals_args):
             # Merge constraint of each sub-element
             args_constraint = itertools.chain(*[consval.constraints

@@ -17,8 +17,6 @@ from __future__ import print_function
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 from past.builtins import cmp
-from builtins import str
-from builtins import chr
 import struct
 import os
 import stat
@@ -1857,19 +1855,19 @@ def ntdll_LdrGetProcedureAddress(jitter):
 
 def ntdll_memset(jitter):
     ret_ad, args = jitter.func_args_cdecl(['addr', 'c', 'size'])
-    jitter.vm.set_mem(args.addr, chr(args.c) * args.size)
+    jitter.vm.set_mem(args.addr, int_to_byte(args.c) * args.size)
     jitter.func_ret_cdecl(ret_ad, args.addr)
 
 
 def msvcrt_memset(jitter):
     ret_ad, args = jitter.func_args_cdecl(['addr', 'c', 'size'])
-    jitter.vm.set_mem(args.addr, chr(args.c) * args.size)
+    jitter.vm.set_mem(args.addr, int_to_byte(args.c) * args.size)
     jitter.func_ret_cdecl(ret_ad, args.addr)
 
 def msvcrt_strrchr(jitter):
     ret_ad, args = jitter.func_args_cdecl(['pstr','c'])
     s = jitter.get_str_ansi(args.pstr)
-    c = chr(args.c)
+    c = int_to_byte(args.c)
     ret = args.pstr + s.rfind(c)
     log.info("strrchr(%x '%s','%s') = %x" % (args.pstr,s,c,ret))
     jitter.func_ret_cdecl(ret_ad, ret)
@@ -1877,7 +1875,7 @@ def msvcrt_strrchr(jitter):
 def msvcrt_wcsrchr(jitter):
     ret_ad, args = jitter.func_args_cdecl(['pstr','c'])
     s = jitter.get_str_unic(args.pstr)
-    c = chr(args.c)
+    c = int_to_byte(args.c)
     ret = args.pstr + (s.rfind(c)*2)
     log.info("wcsrchr(%x '%s',%s) = %x" % (args.pstr,s,c,ret))
     jitter.func_ret_cdecl(ret_ad, ret)
@@ -2032,7 +2030,7 @@ def shlwapi_StrToInt64ExW(jitter):
 def user32_IsCharAlpha(jitter, funcname, get_str):
     ret_ad, args = jitter.func_args_stdcall(["c"])
     try:
-        c = chr(args.c)
+        c = int_to_byte(args.c)
     except:
         log.error('bad char %r', args.c)
         c = "\x00"
@@ -2053,7 +2051,7 @@ def user32_IsCharAlphaW(jitter):
 
 def user32_IsCharAlphaNumericA(jitter):
     ret_ad, args = jitter.func_args_stdcall(["c"])
-    c = chr(args.c)
+    c = int_to_byte(args.c)
     if c.isalnum(jitter):
         ret = 1
     else:

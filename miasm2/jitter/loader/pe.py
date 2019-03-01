@@ -17,7 +17,7 @@ log = logging.getLogger('loader_pe')
 hnd = logging.StreamHandler()
 hnd.setFormatter(logging.Formatter("[%(levelname)s]: %(message)s"))
 log.addHandler(hnd)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 def get_pe_dependencies(pe_obj):

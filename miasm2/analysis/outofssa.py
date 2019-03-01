@@ -401,7 +401,7 @@ class UnSSADiGraph(object):
         """
         Remove trivial expressions (a=a) in the current graph
         """
-        for irblock in list(viewitems(self.ssa.graph.blocks)):
+        for irblock in list(viewvalues(self.ssa.graph.blocks)):
             assignblks = list(irblock)
             for i, assignblk in enumerate(assignblks):
                 out = {}

@@ -2,6 +2,7 @@ import os
 
 from future.utils import viewitems
 
+from miasm2.core.utils import force_bytes
 from miasm2.jitter.csts import PAGE_READ, PAGE_WRITE
 from miasm2.core.utils import get_caller_name
 from miasm2.core.utils import pck64, upck64
@@ -32,10 +33,7 @@ def get_str_unic(jitter, ad_str, max_char=None):
 
 
 def set_str_ansi(value):
-    try:
-        value = value.encode()
-    except AttributeError:
-        pass
+    value = force_bytes(value)
     return value + b"\x00"
 
 

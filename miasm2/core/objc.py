@@ -5,11 +5,14 @@ C helper for Miasm:
 * Miasm expression to C type
 """
 
-from past.builtins import cmp
+from builtins import zip
+from builtins import int as int_types
+
 import warnings
 from pycparser import c_parser, c_ast
 from functools import total_ordering
 
+from miasm2.core.utils import cmp_elts
 from miasm2.expression.expression_reduce import ExprReducer
 from miasm2.expression.expression import ExprInt, ExprId, ExprOp, ExprMem
 
@@ -89,10 +92,13 @@ class ObjC(object):
         assert other.__class__ in OBJC_PRIO
 
         if OBJC_PRIO[self.__class__] != OBJC_PRIO[other.__class__]:
-            return cmp(OBJC_PRIO[self.__class__], OBJC_PRIO[other.__class__])
+            return cmp_elts(
+                OBJC_PRIO[self.__class__],
+                OBJC_PRIO[other.__class__]
+            )
         if self.align != other.align:
-            return cmp(self.align, other.align)
-        return cmp(self.size, other.size)
+            return cmp_elts(self.align, other.align)
+        return cmp_elts(self.size, other.size)
 
     def __hash__(self):
         return hash((self.__class__, self._align, self._size))
@@ -134,7 +140,7 @@ class ObjCDecl(ObjC):
         ret = self.cmp_base(other)
         if ret:
             return False
-        return cmp(self.name, other.name) == 0
+        return self.name == other.name
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
@@ -142,7 +148,7 @@ class ObjCDecl(ObjC):
             if ret < 0:
                 return True
             return False
-        return cmp(self.name, other.name) < 0
+        return self.name < other.name
 
 
 class ObjCInt(ObjC):
@@ -191,14 +197,16 @@ class ObjCPtr(ObjC):
         return hash((super(ObjCPtr, self).__hash__(), hash(self._objtype)))
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__,
-                            self.objtype.__class__)
+        return '<%s %r>' % (
+            self.__class__.__name__,
+            self.objtype.__class__
+        )
 
     def __eq__(self, other):
         ret = self.cmp_base(other)
         if ret:
             return False
-        return cmp(self.objtype, other.objtype) == 0
+        return self.objtype == other.objtype
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
@@ -206,7 +214,7 @@ class ObjCPtr(ObjC):
             if ret < 0:
                 return True
             return False
-        return cmp(self.objtype, other.objtype) < 0
+        return self.objtype < other.objtype
 
 
 @total_ordering
@@ -237,24 +245,17 @@ class ObjCArray(ObjC):
         ret = self.cmp_base(other)
         if ret:
             return False
-        ret = cmp(self.elems, other.elems)
-        if ret:
+        if self.objtype != other.objtype:
             return False
-        return cmp(self.objtype, other.objtype) == 0
+        return self.elems == other.elems
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
-        if ret:
-            if ret < 0:
-                return True
+        if ret > 0:
             return False
-        ret = cmp(self.elems, other.elems)
-        if ret:
-            if ret < 0:
-                return True
+        if self.objtype > other.objtype:
             return False
-        return cmp(self.objtype, other.objtype) < 0
-
+        return self.elems < other.elems
 
 @total_ordering
 class ObjCStruct(ObjC):
@@ -287,7 +288,7 @@ class ObjCStruct(ObjC):
         ret = self.cmp_base(other)
         if ret:
             return False
-        return cmp(self.name, other.name) == 0
+        return self.name == other.name
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
@@ -295,7 +296,7 @@ class ObjCStruct(ObjC):
             if ret < 0:
                 return True
             return False
-        return cmp(self.name, other.name) < 0
+        return self.name < other.name
 
 
 @total_ordering
@@ -329,7 +330,7 @@ class ObjCUnion(ObjC):
         ret = self.cmp_base(other)
         if ret:
             return False
-        return cmp(self.name, other.name) == 0
+        return self.name == other.name
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
@@ -337,7 +338,7 @@ class ObjCUnion(ObjC):
             if ret < 0:
                 return True
             return False
-        return cmp(self.name, other.name) < 0
+        return self.name < other.name
 
 class ObjCEllipsis(ObjC):
     """C integer"""
@@ -386,7 +387,7 @@ class ObjCFunc(ObjC):
         ret = self.cmp_base(other)
         if ret:
             return False
-        return cmp(self.name, other.name) == 0
+        return self.name == other.name
 
     def __lt__(self, other):
         ret = self.cmp_base(other)
@@ -394,7 +395,7 @@ class ObjCFunc(ObjC):
             if ret < 0:
                 return True
             return False
-        return cmp(self.name, other.name) < 0
+        return self.name < other.name
 
 OBJC_PRIO = {
     ObjC: 0,
@@ -515,7 +516,7 @@ class CGenInt(CGen):
     """Int C object"""
 
     def __init__(self, integer):
-        assert isinstance(integer, int)
+        assert isinstance(integer, int_types)
         self._integer = integer
         super(CGenInt, self).__init__(ObjCInt())
 
@@ -1578,7 +1579,7 @@ class CTypesManager(object):
                 return arg0 >> arg1
             else:
                 raise ValueError("Unknown operator %s" % size.operator)
-        elif isinstance(size, int):
+        elif isinstance(size, int_types):
             return size
         elif isinstance(size, CTypeSizeof):
             obj = self._get_objc(size.target)

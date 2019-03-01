@@ -567,7 +567,7 @@ class ExprId(Expr):
         if size is None:
             warnings.warn('DEPRECATION WARNING: size is a mandatory argument: use ExprId(name, SIZE)')
             size = 32
-        assert isinstance(name, str) or isinstance(name, bytes)
+        assert isinstance(name, (str, bytes))
         super(ExprId, self).__init__(size)
         self._name = name
 
@@ -1359,19 +1359,16 @@ class ExprCompose(Expr):
         return True
 
 # Expression order for comparison
-EXPR_ORDER_DICT = {ExprId: 1,
-                   ExprLoc: 2,
-                   ExprCond: 3,
-                   ExprMem: 4,
-                   ExprOp: 5,
-                   ExprSlice: 6,
-                   ExprCompose: 7,
-                   ExprInt: 8,
-                  }
-
-
-def cmp_elts(elt1, elt2):
-    return (elt1 > elt2) - (elt1 < elt2)
+EXPR_ORDER_DICT = {
+    ExprId: 1,
+    ExprLoc: 2,
+    ExprCond: 3,
+    ExprMem: 4,
+    ExprOp: 5,
+    ExprSlice: 6,
+    ExprCompose: 7,
+    ExprInt: 8,
+}
 
 
 def compare_exprs_compose(expr1, expr2):

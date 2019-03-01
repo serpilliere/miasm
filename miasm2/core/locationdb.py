@@ -335,7 +335,10 @@ class LocationDB(object):
         names = self.get_location_names(loc_key)
         new_names = set()
         for name in names:
-            name = force_bytes(name)
+            try:
+                name = name.decode()
+            except AttributeError:
+                pass
             new_names.add(name)
         names = new_names
         if names:

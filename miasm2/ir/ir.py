@@ -72,7 +72,7 @@ class AssignBlock(object):
         self._assigns = {} # ExprAssign.dst -> ExprAssign.src
 
         # Concurrent assignments are handled in _set
-        if hasattr(irs, "iteritems") or hasattr(irs, "items"):
+        if hasattr(irs, "items"):
             for dst, src in viewitems(irs):
                 self._set(dst, src)
         else:
@@ -877,7 +877,7 @@ class IntermediateRepresentation(object):
     def is_pc_written(self, block):
         """Return the first Assignblk of the @blockin which PC is written
         @block: IRBlock instance"""
-        all_pc = list(viewvalues(self.arch.pc))
+        all_pc = viewvalues(self.arch.pc)
         for assignblk in block:
             if assignblk.dst in all_pc:
                 return assignblk
