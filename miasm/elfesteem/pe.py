@@ -23,6 +23,13 @@ class InvalidOffset(Exception):
     pass
 
 
+def force_bytes(value):
+    try:
+        return value.encode()
+    except AttributeError:
+        return value
+
+
 class Doshdr(CStruct):
     _fields = [("magic", "u16"),
                ("cblp", "u16"),
@@ -229,7 +236,8 @@ class SHList(CStruct):
     def __repr__(self):
         rep = ["#  section         offset   size   addr     flags   rawsize  "]
         for i, section in enumerate(self):
-            out = "%-15s" % section.name.strip(b'\x00').decode()
+            name = force_bytes(section.name)
+            out = "%-15s" % name.strip(b'\x00').decode()
             out += "%(offset)08x %(size)06x %(addr)08x %(flags)08x %(rawsize)08x" % section
             out = ("%2i " % i) + out
             rep.append(out)
