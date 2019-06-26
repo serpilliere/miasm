@@ -554,6 +554,8 @@ test_x86_32_dis = ExampleShellcode(
 
 test_human = ExampleShellcode(["x86_64", "human.S", "human.bin"])
 
+test_bp_x86_32_mem = ExampleShellcode(["x86_32", "x86_32_bp_mem.S", "x86_32_bp_mem.bin"])
+
 testset += test_armb
 testset += test_arml
 testset += test_aarch64b
@@ -571,6 +573,7 @@ testset += test_x86_32_seh
 testset += test_x86_32_dead
 testset += test_human
 testset += test_x86_32_dis
+testset += test_bp_x86_32_mem
 
 class ExampleDisassembler(Example):
     """Disassembler examples specificities:
@@ -799,6 +802,7 @@ for script, dep in [(["x86_32.py", Example.get_sample("x86_32_sc.bin")], []),
                     (["arm_sc.py", "0", Example.get_sample("demo_arm_l.bin"),
                       "l", "-a", "0"], [test_arml]),
                     (["sandbox_call.py", Example.get_sample("md5_arm")], []),
+                    (["x86_32_bp_mem.py", Example.get_sample("x86_32_bp_mem.bin")], []),
                     ] + [(["sandbox_pe_x86_32.py",
                            Example.get_sample("x86_32_" + name + ".bin")],
                           [test_box[name]])
