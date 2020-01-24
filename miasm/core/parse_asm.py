@@ -68,7 +68,7 @@ STATE_IN_BLOC = 1
 
 def asm_ast_to_expr_with_size(arg, loc_db, size):
     if isinstance(arg, AstId):
-        return ExprId(force_str(arg.name), size)
+        return ExprId(arg.name, size)
     if isinstance(arg, AstOp):
         args = [asm_ast_to_expr_with_size(tmp, loc_db, size) for tmp in arg.args]
         return ExprOp(arg.op, *args)

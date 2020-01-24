@@ -157,6 +157,7 @@ class instruction_mep(instruction):
             o += ", %s" % self.arg2str(self.args[1])
             # The third operand is displayed in decimal, not in hex
             o += ", %s" % ExprInt2SignedString(self.args[2], pos_fmt="0x%X")
+            o += ", %s" % ExprInt2SignedString(int(self.args[2]), pos_fmt="0x%X")
 
         elif self.name == "(RI)":
             return o

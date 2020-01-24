@@ -10,6 +10,7 @@ from miasm.expression.expression import ExprLoc, ExprMem, ExprId, ExprInt,\
     ExprAssign, ExprOp, ExprWalk, ExprSlice, \
     is_function_call, ExprVisitorCallbackBottomToTop
 from miasm.expression.simplifications import expr_simp, expr_simp_explicit
+
 from miasm.core.interval import interval
 from miasm.expression.expression_helper import possible_values
 from miasm.analysis.ssa import get_phi_sources_parent_block, \
@@ -241,9 +242,11 @@ class DeadRemoval(object):
         useful = set()
         for index, assignblk in enumerate(block):
             for lval, rval in viewitems(assignblk):
-                if self.is_unkillable_destination(lval, rval):
-                    useful.add(AssignblkNode(block.loc_key, index, lval))
-        return useful
+                if (lval.is_mem() or
+                    irarch.IRDst == lval or
+                    lval.is_id("exception_flags") or
+                    is_function_call(rval)):
+                    useful.add(AssignblkNode(block_lbl, index, lval))
 
     def is_tracked_var(self, lval, variable):
         new_lval = self.expr_to_original_expr.get(lval, lval)
@@ -738,6 +741,7 @@ def expr_has_mem(expr):
         return self.is_mem()
     visitor = ExprWalk(has_mem)
     return visitor.visit(expr)
+
 
 
 def stack_to_reg(expr):

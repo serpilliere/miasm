@@ -261,3 +261,21 @@ class BoundedDict(DictMixin):
 
     def __iter__(self):
         return iter(self._data)
+
+
+
+def find_free_name(loc_db, name):
+    """
+    If @name is not known in DB, return it
+    Else append an index to it corresponding to the next unknown name
+
+    @name: string
+    """
+    if loc_db.get_name_location(name) is None:
+        return name
+    i = 0
+    while True:
+        new_name = "%s_%d" % (name, i)
+        if loc_db.get_name_location(new_name) is None:
+            return new_name
+        i += 1

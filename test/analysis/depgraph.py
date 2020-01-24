@@ -843,8 +843,8 @@ def match_results(resultsA, resultsB, nodes):
     out = []
 
     if len(resultsA) != len(resultsB):
+        fds
         return False
-
     for flatA in resultsA:
         resultA = unflatGraph(flatA)
         nodes = resultA.leaves()
