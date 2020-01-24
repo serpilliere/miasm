@@ -9,7 +9,7 @@ import miasm.loader.elf as elf_csts
 
 from miasm.jitter.csts import *
 from miasm.jitter.loader.utils import canon_libname_libfunc, libimp
-from miasm.core.utils import force_str
+from miasm.core.utils import force_str, find_free_name
 from miasm.core.interval import interval
 
 import logging
@@ -71,17 +71,24 @@ def fill_loc_db_with_symbols(elf, loc_db, base_addr=0):
     for section_header in elf.sh:
         if hasattr(section_header, 'symbols'):
             for name, sym in viewitems(section_header.symbols):
+                name = force_str(name)
                 if not name or sym.value == 0:
                     continue
-                name = loc_db.find_free_name(force_str(name))
-                loc_db.add_location(name, sym.value, strict=False)
+                name = find_free_name(loc_db, force_str(name))
+                loc_key = loc_db.get_or_create_name_location(name)
+                loc_db.set_location_offset(loc_key, sym.value)
+                #loc_db.add_location(name, sym.value)#, strict=False)
 
         if hasattr(section_header, 'reltab'):
             for rel in section_header.reltab:
                 if not rel.sym or rel.offset == 0:
                     continue
-                name = loc_db.find_free_name(force_str(rel.sym))
-                loc_db.add_location(name, rel.offset, strict=False)
+                name = force_str(rel.sym)
+                name = find_free_name(loc_db, name)
+                loc_key = loc_db.get_or_create_name_location(name)
+                loc_db.set_location_offset(loc_key, sym.value)
+
+                #loc_db.add_location(name, rel.offset)#, strict=False)
 
         if hasattr(section_header, 'symtab'):
             log.debug("Find %d symbols in %r", len(section_header.symtab),
@@ -156,6 +163,7 @@ def fill_loc_db_with_symbols(elf, loc_db, base_addr=0):
                     # Global symbol, force it
                     loc_db.remove_location_name(already_existing_loc,
                                                 name)
+
             already_existing_off = loc_db.get_offset_location(vaddr)
             if already_existing_off is not None:
                 loc_db.add_location_name(already_existing_off, name)
