@@ -180,8 +180,8 @@ def simp_cst_propagation(e_s, expr):
         args[0].src1.is_int() and args[0].src2.is_int()):
         int1 = args[0].src1
         int2 = args[0].src2
-        int1 = ExprInt(-int1.arg, int1.size)
-        int2 = ExprInt(-int2.arg, int2.size)
+        int1 = ExprInt(-int(int1), int1.size)
+        int2 = ExprInt(-int(int2), int2.size)
         return ExprCond(args[0].cond, int1, int2)
 
     i = 0

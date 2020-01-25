@@ -168,7 +168,9 @@ def fill_loc_db_with_symbols(elf, loc_db, base_addr=0):
             if already_existing_off is not None:
                 loc_db.add_location_name(already_existing_off, name)
             else:
-                loc_db.add_location(name=name, offset=vaddr)
+                loc_key = loc_db.add_location()
+                loc_db.add_location_name(loc_key, name)
+                loc_db.set_location_offset(loc_key, vaddr)
 
 
 def apply_reloc_x86(elf, vm, section, base_addr, loc_db):

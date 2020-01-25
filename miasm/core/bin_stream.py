@@ -22,6 +22,7 @@ from future.utils import PY3
 from miasm.core.utils import BIG_ENDIAN, LITTLE_ENDIAN
 from miasm.core.utils import upck8le, upck16le, upck32le, upck64le
 from miasm.core.utils import upck8be, upck16be, upck32be, upck64be
+from miasm_rs import BinStreamVm
 
 
 class bin_stream(object):

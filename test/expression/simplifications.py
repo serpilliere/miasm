@@ -274,7 +274,7 @@ to_test = [(ExprInt(1, 32) - ExprInt(1, 32), ExprInt(0, 32)),
     (a & b & ExprInt(-1, a.size), a & b),
     (a | b | ExprInt(-1, a.size),
      ExprInt(-1, a.size)),
-    (ExprOp('-', ExprInt(1, 8), ExprInt(0, 8)),
+    (ExprInt(1, 8) - ExprInt(0, 8),
      ExprInt(1, 8)),
 
     (ExprCompose(a, ExprInt(0, 32)) << ExprInt(0x20, 64),
