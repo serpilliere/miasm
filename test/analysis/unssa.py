@@ -556,7 +556,7 @@ for irb in [G10_IRB0, G10_IRB1, G10_IRB2]:
 
 
 
-ExprId.__repr__ = ExprId.__str__
+#ExprId.__repr__ = ExprId.__str__
 
 
 

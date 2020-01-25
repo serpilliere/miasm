@@ -43,16 +43,11 @@ def replace_expr(e):
 print(x)
 y = x.visit(replace_expr)
 print(y)
-print(x.copy())
-print(y.copy())
-print(y == y.copy())
-print(repr(y), repr(y.copy()))
 
 
 z = ExprCompose(a[5:5 + 8], b[:16], x[:8])
 print(z)
-print(z.copy())
-print(z[:31].copy().visit(replace_expr))
+print(z[:31].visit(replace_expr))
 
 print('replace')
 print(x.replace_expr({c + ExprInt(0x42, 32): d,
@@ -61,5 +56,3 @@ print(z.replace_expr({c + ExprInt(0x42, 32): d,
                       a + b: c, }))
 
 
-u = z.copy()
-print(u)

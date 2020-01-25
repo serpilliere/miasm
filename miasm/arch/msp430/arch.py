@@ -77,6 +77,13 @@ class msp430_arg(m_arg):
             args = [self.asm_ast_to_expr(tmp, loc_db) for tmp in value.args]
             if None in args:
                 return None
+            if value.op == "-":
+                if len(args) == 1:
+                    return - args[0]
+                elif len(args) == 2:
+                    return args[0] - args[1]
+                else:
+                    raise ValueError("Bad arguments for -")
             return ExprOp(value.op, *args)
         if isinstance(value, AstInt):
             return ExprInt(value.value, 16)

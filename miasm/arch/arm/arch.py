@@ -799,8 +799,12 @@ class arm_arg(m_arg):
             if None in args:
                 return None
             if arg.op == "-":
-                assert len(args) == 2
-                return args[0] - args[1]
+                if len(args) == 1:
+                    return - args[0]
+                elif len(args) == 2:
+                    return args[0] - args[1]
+                else:
+                    raise ValueError("Bad arguments for -")
             return ExprOp(arg.op, *args)
         if isinstance(arg, AstInt):
             return ExprInt(arg.value, 32)

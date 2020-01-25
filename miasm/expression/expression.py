@@ -680,7 +680,7 @@ def match_expr(expr, pattern, tks, result=None):
             return False
 
         # Perform permutation only if the current operation is commutative
-        if expr.is_commutative():
+        if is_commutative(expr):
             permutations = itertools.permutations(expr.args)
         else:
             permutations = [expr.args]

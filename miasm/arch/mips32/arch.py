@@ -272,6 +272,13 @@ class mips32_arg(cpu.m_arg):
             args = [self.asm_ast_to_expr(tmp, loc_db) for tmp in arg.args]
             if None in args:
                 return None
+            if arg.op == "-":
+                if len(args) == 1:
+                    return - args[0]
+                elif len(args) == 2:
+                    return args[0] - args[1]
+                else:
+                    raise ValueError("Bad arguments for -")
             return ExprOp(arg.op, *args)
         if isinstance(arg, AstInt):
             return ExprInt(arg.value, 32)

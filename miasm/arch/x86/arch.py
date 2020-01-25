@@ -305,6 +305,13 @@ class x86_arg(m_arg):
                 raise ValueError("Size conflict")
             if None in args:
                 return None
+            if value.op == "-":
+                if len(args) == 1:
+                    return - args[0]
+                elif len(args) == 2:
+                    return args[0] - args[1]
+                else:
+                    raise ValueError("Bad arguments for -")
             return ExprOp(value.op, *args)
         if isinstance(value, AstInt):
             if 1 << size_hint < value.value:

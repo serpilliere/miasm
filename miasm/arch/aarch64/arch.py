@@ -299,7 +299,13 @@ class aarch64_arg(m_arg):
                 args = [self.asm_ast_to_expr(arg, loc_db, size, fixed_size) for arg in value.args]
             else:
                 raise ValueError("Size conflict")
-
+            if value.op == "-":
+                if len(args) == 1:
+                    return - args[0]
+                elif len(args) == 2:
+                    return args[0] - args[1]
+                else:
+                    raise ValueError("Bad arguments for -")
             return m2_expr.ExprOp(value.op, *args)
         return None
 
