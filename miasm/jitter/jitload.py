@@ -218,7 +218,7 @@ class Jitter(object):
         self.vm = VmMngr.Vm()
         self.cpu = jcore.JitCpu()
         self.lifter = lifter
-        self.bs = bin_stream_vm(self.vm)
+        self.bs = bin_stream_vm(self.vm.vmmngr)
         self.ircfg = self.lifter.new_ircfg()
 
         self.symbexec = EmulatedSymbExec(

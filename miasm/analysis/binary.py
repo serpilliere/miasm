@@ -3,7 +3,7 @@ import warnings
 
 from miasm.core.bin_stream import bin_stream_str, bin_stream_elf, bin_stream_pe
 from miasm.jitter.csts import PAGE_READ
-
+from miasm_rs import Memory
 
 log = logging.getLogger("binary")
 console_handler = logging.StreamHandler()
@@ -152,12 +152,15 @@ class ContainerPE(Container):
         self._arch = guess_arch(self._executable)
 
         # Build the bin_stream instance and set the entry point
-        try:
-            self._bin_stream = bin_stream_pe(self._executable)
+        if True:#try:
+            #self._bin_stream = bin_stream_pe(self._executable)
+            memory = Memory()
+            memory.from_buffer(data)
+            self._bin_stream = memory.get_binstream()
             ep_detected = self._executable.Opthdr.AddressOfEntryPoint
             self._entry_point = self._executable.rva2virt(ep_detected)
-        except Exception as error:
-            raise ContainerParsingException('Cannot read PE: %s' % error)
+        #except Exception as error:
+        #    raise ContainerParsingException('Cannot read PE: %s' % error)
 
 
 class ContainerELF(Container):

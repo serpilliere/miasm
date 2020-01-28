@@ -23,6 +23,7 @@ from miasm.core.utils import BIG_ENDIAN, LITTLE_ENDIAN
 from miasm.core.utils import upck8le, upck16le, upck32le, upck64le
 from miasm.core.utils import upck8be, upck16be, upck32be, upck64be
 from miasm_rs import BinStreamVm
+from miasm_rs import BinStreamStr
 
 
 class bin_stream(object):
@@ -167,43 +168,6 @@ class bin_stream(object):
             return upck64be(data)
 
 
-class bin_stream_str(bin_stream):
-
-    def __init__(self, input_str=b"", offset=0, base_address=0, shift=None):
-        bin_stream.__init__(self)
-        if shift is not None:
-            raise DeprecationWarning("use base_address instead of shift")
-        self.bin = input_str
-        self.offset = offset
-        self.base_address = base_address
-        self.l = len(input_str)
-
-    def _getbytes(self, start, l=1):
-        if start + l - self.base_address > self.l:
-            raise IOError("not enough bytes in str")
-        if start - self.base_address < 0:
-            raise IOError("Negative offset")
-
-        return super(bin_stream_str, self)._getbytes(start - self.base_address, l)
-
-    def readbs(self, l=1):
-        if self.offset + l - self.base_address > self.l:
-            raise IOError("not enough bytes in str")
-        if self.offset - self.base_address < 0:
-            raise IOError("Negative offset")
-        self.offset += l
-        return self.bin[self.offset - l - self.base_address:self.offset - self.base_address]
-
-    def __bytes__(self):
-        return self.bin[self.offset - self.base_address:]
-
-    def setoffset(self, val):
-        self.offset = val
-
-    def getlen(self):
-        return self.l - (self.offset - self.base_address)
-
-
 class bin_stream_file(bin_stream):
 
     def __init__(self, binary, offset=0, base_address=0, shift=None):
@@ -284,34 +248,5 @@ class bin_stream_elf(bin_stream_container):
         self.endianness = binary.sex
 
 
-class bin_stream_vm(bin_stream):
-
-    def __init__(self, vm, offset=0, base_offset=0):
-        self.offset = offset
-        self.base_offset = base_offset
-        self.vm = vm
-        if self.vm.is_little_endian():
-            self.endianness = LITTLE_ENDIAN
-        else:
-            self.endianness = BIG_ENDIAN
-
-    def getlen(self):
-        return 0xFFFFFFFFFFFFFFFF
-
-    def _getbytes(self, start, l=1):
-        try:
-            s = self.vm.get_mem(start + self.base_offset, l)
-        except:
-            raise IOError('cannot get mem ad', hex(start))
-        return s
-
-    def readbs(self, l=1):
-        try:
-            s = self.vm.get_mem(self.offset + self.base_offset, l)
-        except:
-            raise IOError('cannot get mem ad', hex(self.offset))
-        self.offset += l
-        return s
-
-    def setoffset(self, val):
-        self.offset = val
+bin_stream_vm = BinStreamVm
+bin_stream_str = BinStreamStr

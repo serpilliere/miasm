@@ -16,7 +16,7 @@ import miasm.expression.expression as m2_expr
 from miasm.core.bin_stream import bin_stream, bin_stream_str
 from miasm.core.utils import Disasm_Exception
 from miasm.expression.simplifications import expr_simp
-
+from miasm_rs import BinStream
 
 from miasm.core.asm_ast import AstNode, AstInt, AstId, AstOp
 from future.utils import with_metaclass
@@ -1075,21 +1075,21 @@ class cls_mn(with_metaclass(metamn, object)):
 
         fname_values = pre_dis_info
         todo = [
-            (dict(fname_values), branch, offset * 8)
+            (dict(fname_values), branch, offset, 0)
             for branch in list(viewitems(cls.bintree))
         ]
-        for fname_values, branch, offset_b in todo:
+        for fname_values, branch, offset, offset_bit in todo:
             (l, fmask, fbits, fname, flen), vals = branch
 
             if flen is not None:
                 l = flen(attrib, fname_values)
             if l is not None:
                 try:
-                    v = cls.getbits(bs, attrib, offset_b, l)
+                    v = cls.getbits(bs, attrib, offset, offset_bit, l)
                 except IOError:
                     # Raised if offset is out of bound
                     continue
-                offset_b += l
+                offset_bit += l
                 if v & fmask != fbits:
                     continue
                 if fname is not None and not fname in fname_values:
@@ -1098,7 +1098,7 @@ class cls_mn(with_metaclass(metamn, object)):
                 if 'mn' in nb:
                     candidates.update(v)
                 else:
-                    todo.append((dict(fname_values), (nb, v), offset_b))
+                    todo.append((dict(fname_values), (nb, v), offset, offset_bit))
 
         return [c for c in candidates]
 
@@ -1142,12 +1142,12 @@ class cls_mn(with_metaclass(metamn, object)):
         return True
 
     @classmethod
-    def getbits(cls, bs, attrib, offset_b, l):
-        return bs.getbits(offset_b, l)
+    def getbits(cls, bs, attrib, offset, offset_bit, l):
+        return bs.get_bits(offset, offset_bit, l)
 
     @classmethod
     def getbytes(cls, bs, offset, l):
-        return bs.getbytes(offset, l)
+        return bs.get_bytes_exact(offset, l)
 
     @classmethod
     def pre_dis(cls, v_o, attrib, offset):
@@ -1166,33 +1166,34 @@ class cls_mn(with_metaclass(metamn, object)):
 
     @classmethod
     def dis(cls, bs_o, mode_o = None, offset=0):
-        if not isinstance(bs_o, bin_stream):
-            bs_o = bin_stream_str(bs_o)
+        assert isinstance(bs_o, BinStream)
+        #if not isinstance(bs_o, bin_stream):
+        #    bs_o = bin_stream_str(bs_o)
 
-        bs_o.enter_atomic_mode()
+        #bs_o.enter_atomic_mode()
 
         offset_o = offset
         try:
             pre_dis_info, bs, mode, offset, prefix_len = cls.pre_dis(
                 bs_o, mode_o, offset)
         except:
-            bs_o.leave_atomic_mode()
+            #bs_o.leave_atomic_mode()
             raise
         candidates = cls.guess_mnemo(bs, mode, pre_dis_info, offset)
         if not candidates:
-            bs_o.leave_atomic_mode()
+            #bs_o.leave_atomic_mode()
             raise Disasm_Exception('cannot disasm (guess) at %X' % offset)
 
         out = []
         out_c = []
-        if hasattr(bs, 'getlen'):
-            bs_l = bs.getlen()
-        else:
-            bs_l = len(bs)
+        #if hasattr(bs, 'getlen'):
+        #    bs_l = bs.getlen()
+        #else:
+        #    bs_l = len(bs)
 
         alias = False
         for c in candidates:
-            log.debug("*" * 40, mode, c.mode)
+            log.debug("*" * 40 + "%r", (mode, c.mode))
             log.debug(c.fields)
 
             c = cls.all_mn_inst[c][0]
@@ -1206,7 +1207,7 @@ class cls_mn(with_metaclass(metamn, object)):
             todo = {}
             getok = True
             fname_values = dict(pre_dis_info)
-            offset_b = offset * 8
+            offset_bit = 0
 
             total_l = 0
             for i, f in enumerate(c.fields_order):
@@ -1219,16 +1220,16 @@ class cls_mn(with_metaclass(metamn, object)):
                     f.l = l
                     f.is_present = True
                     log.debug("FIELD %s %s %s %s", f.__class__, f.fname,
-                              offset_b, l)
-                    if bs_l * 8 - offset_b < l:
-                        getok = False
-                        break
+                              offset_bit, l)
+                    #if bs_l * 8 - offset_b < l:
+                    #    getok = False
+                    #    break
                     try:
-                        bv = cls.getbits(bs, mode, offset_b, l)
+                        bv = cls.getbits(bs, mode, offset, offset_bit, l)
                     except:
-                        bs_o.leave_atomic_mode()
+                        #bs_o.leave_atomic_mode()
                         raise
-                    offset_b += l
+                    offset_bit += l
                     if not f.fname in fname_values:
                         fname_values[f.fname] = bv
                     todo[i] = bv
@@ -1270,7 +1271,7 @@ class cls_mn(with_metaclass(metamn, object)):
             out.append(instr)
             out_c.append(c)
 
-        bs_o.leave_atomic_mode()
+        #bs_o.leave_atomic_mode()
 
         if not out:
             raise Disasm_Exception('cannot disasm at %X' % offset_o)
@@ -1285,6 +1286,8 @@ class cls_mn(with_metaclass(metamn, object)):
                 'Multiple disas: \n' +
                 "\n".join(str(x) for x in out)
             )
+
+
         return out[0]
 
     @classmethod

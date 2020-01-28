@@ -3139,7 +3139,7 @@ for mode, s, l, in reg_tests:
     s = s[12:]
     b = decode_hex(l)
     print(mode, repr(b))
-    mn = mn_x86.dis(b, mode)
+    mn = mn_x86.dis(bin_stream_str(b).get_binstream(), mode)
     print("dis args", [(str(x), x.size) for x in mn.args])
     print(s)
     print(mn)
@@ -3160,7 +3160,7 @@ for mode, s, l, in reg_tests:
     print('test re dis')
     for x in a:
         print(repr(x))
-        rl = mn_x86.dis(x, mode)
+        rl = mn_x86.dis(bin_stream_str(x).get_binstream(), mode)
         assert(str(rl).strip(' ') == s)
     print(repr(b), a)
     assert(b in a)
@@ -3183,11 +3183,11 @@ open('x86_speed_reg_test.bin', 'wb').write(o)
 
 
 def profile_dis(o):
-    bs = bin_stream_str(o)
+    bs = bin_stream_str(o).get_binstream()
     off = 0
     instr_num = 0
     ts = time.time()
-    while off < bs.getlen():
+    while off < len(o):
         mn = mn_x86.dis(bs, mode_x, off)
         # print instr_num, off, mn.l, str(mn)
         instr_num += 1
@@ -3199,5 +3199,6 @@ cProfile.run('profile_dis(o)')
 
 # Test instruction representation with prefix
 instr_bytes = b'\x65\xc7\x00\x09\x00\x00\x00'
-inst = mn_x86.dis(instr_bytes, 32, 0)
+bs = bin_stream_str(instr_bytes).get_binstream()
+inst = mn_x86.dis(bs, 32, 0)
 assert(inst.b == instr_bytes)

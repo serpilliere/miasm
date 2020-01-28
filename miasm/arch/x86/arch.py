@@ -729,7 +729,7 @@ class mn_x86(cls_mn):
                         'prefixed': b"",
                         }
         while True:
-            c = v.getbytes(offset)
+            c = v.get_bytes_exact(offset, 1)
             if c == b'\x66':
                 pre_dis_info['opmode'] = 1
             elif c == b'\x67':
