@@ -204,7 +204,10 @@ class ContainerELF(Container):
 
         # Build the bin_stream instance and set the entry point
         try:
-            self._bin_stream = bin_stream_elf(self._executable)
+            memory = Memory()
+            memory.from_buffer(data)
+            self._bin_stream = memory.get_binstream()
+
             self._entry_point = self._executable.Ehdr.entry + addr
         except Exception as error:
             raise ContainerParsingException('Cannot read ELF: %s' % error)

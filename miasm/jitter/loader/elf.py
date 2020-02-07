@@ -75,6 +75,8 @@ def fill_loc_db_with_symbols(elf, loc_db, base_addr=0):
                 if not name or sym.value == 0:
                     continue
                 name = find_free_name(loc_db, force_str(name))
+                if loc_db.get_offset_location(sym.value) is not None:
+                    continue
                 loc_key = loc_db.get_or_create_name_location(name)
                 loc_db.set_location_offset(loc_key, sym.value)
                 #loc_db.add_location(name, sym.value)#, strict=False)
@@ -82,6 +84,8 @@ def fill_loc_db_with_symbols(elf, loc_db, base_addr=0):
         if hasattr(section_header, 'reltab'):
             for rel in section_header.reltab:
                 if not rel.sym or rel.offset == 0:
+                    continue
+                if loc_db.get_offset_location(sym.value) is not None:
                     continue
                 name = force_str(rel.sym)
                 name = find_free_name(loc_db, name)

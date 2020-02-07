@@ -24,6 +24,7 @@ from miasm.core.utils import upck8le, upck16le, upck32le, upck64le
 from miasm.core.utils import upck8be, upck16be, upck32be, upck64be
 from miasm_rs import BinStreamVm
 from miasm_rs import BinStreamStr
+from miasm_rs import Memory
 
 
 class bin_stream(object):
