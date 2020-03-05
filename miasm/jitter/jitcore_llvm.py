@@ -9,7 +9,18 @@ import miasm.jitter.jitcore as jitcore
 from miasm.jitter import Jitllvm
 import platform
 
+
 is_win = platform.system() == "Windows"
+
+# Load runtime (division & others)
+# This isn't completely ideal: we use a Python extension to ease the build
+# system, but in the end it's not a valid Python module. Anyway, what we do
+# here is gathered this shared library and load it inside the process thanks to
+# llvmlite. This expose what we need from compiler-rt (see
+# https://github.com/numba/llvmlite/issues/495).
+import llvmlite.binding
+_miasm_rt = importlib.util.find_spec("miasm.runtime").origin
+llvmlite.binding.load_library_permanently(_miasm_rt)
 
 class JitCore_LLVM(jitcore.JitCore):
     "JiT management, using LLVM as backend"
