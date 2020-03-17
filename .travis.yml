@@ -1,7 +1,6 @@
 sudo: false
 language: python
 os:
-  - linux
   - osx
 addons:
   homebrew:
