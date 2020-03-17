@@ -1,5 +1,8 @@
 sudo: false
 language: python
+os:
+  - linux
+  - osx
 python:
   - 2.7
   - 3.6
@@ -17,9 +20,6 @@ env:
   matrix:
   include:
     - os: linux
-      language: generic
-      env: MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
-    - os: osx
       language: generic
       env: MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
