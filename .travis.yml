@@ -30,5 +30,5 @@ before_script:
 # extended tests
 - git clone https://github.com/cea-sec/miasm-extended-tests
 script:
-  - test -z "$MIASM_TEST_EXTRA_ARG" || (cd test && flags=""; python --version |& grep -q "Python 3" || flags="-W error"; python $flags test_all.py $MIASM_TEST_EXTRA_ARG && git ls-files -o --exclude-standard)
+  - test -z "$MIASM_TEST_EXTRA_ARG" || (cd test && flags=""; python --version | grep -q "Python 3" || flags="-W error"; python $flags test_all.py $MIASM_TEST_EXTRA_ARG && git ls-files -o --exclude-standard)
   - test -z "$MIASM_EXTENTED_TESTS" || (cd "miasm-extended-tests/$MIASM_EXTENTED_TESTS" && ./run.sh "$TRAVIS_BUILD_DIR")
