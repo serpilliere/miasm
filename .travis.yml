@@ -25,6 +25,12 @@ jobs:
        - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o qemu -t python,gcc"
 
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o qemu -t python,llvm"
+
 
 
 
