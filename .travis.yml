@@ -13,11 +13,30 @@ addons:
       - g++-5
 jobs:
   include:
+
     - os: osx
       language: generic
       env:
        - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o example -t long,python,llvm,gcc,z3,qemu,cparser"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o long"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o qemu -t llvm,gcc"
 
     - os: osx
       language: generic
@@ -31,7 +50,41 @@ jobs:
        - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o qemu -t python,llvm"
 
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o llvm -t qemu,long"
 
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o gcc -t qemu,long"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o python -t qemu,long"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o z3"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o cparser"
+
+    - os: osx
+      language: generic
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_EXTENTED_TESTS="ls_x64"
 
 
 before_script:
