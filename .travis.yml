@@ -19,12 +19,9 @@ env:
     - os: osx
       osx_image: xcode9.4
       language: generic
-      env: TOXENV=py36
-      addons:
-        homebrew:
-          # update: true
-          packages: python3
-      env: MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
 
 before_script:
