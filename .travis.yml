@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 python:
-  - 3.7
+  - 3.6
 addons:
   homebrew:
     brewfile: true
@@ -18,9 +18,15 @@ env:
   global: CXX=g++-5 LLVM_CONFIG=llvm-config-6.0 PATH=/usr/local/opt/gnu-sed/libexec/gnubin:$PATH
   matrix:
   include:
-    - language: generic
+    - os: osx
+      osx_image: xcode9.4
+      language: generic
+      env: TOXENV=py36
+      addons:
+        homebrew:
+          # update: true
+          packages: python3
       env: MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
-
 
 
 before_script:
