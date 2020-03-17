@@ -15,18 +15,13 @@ addons:
 env:
   global: CXX=g++-5 LLVM_CONFIG=llvm-config-6.0 PATH=/usr/local/opt/gnu-sed/libexec/gnubin:$PATH
   matrix:
-    - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
-    - MIASM_TEST_EXTRA_ARG="-o example -t long,python,llvm,gcc,z3,qemu,cparser"
-    - MIASM_TEST_EXTRA_ARG="-o long"
-    - MIASM_TEST_EXTRA_ARG="-o qemu -t llvm,gcc"
-    - MIASM_TEST_EXTRA_ARG="-o qemu -t python,gcc"
-    - MIASM_TEST_EXTRA_ARG="-o qemu -t python,llvm"
-    - MIASM_TEST_EXTRA_ARG="-o llvm -t qemu,long"
-    - MIASM_TEST_EXTRA_ARG="-o gcc -t qemu,long"
-    - MIASM_TEST_EXTRA_ARG="-o python -t qemu,long"
-    - MIASM_TEST_EXTRA_ARG="-o z3"
-    - MIASM_TEST_EXTRA_ARG="-o cparser"
-    - MIASM_EXTENTED_TESTS="ls_x64"
+  include:
+    - os: linux
+      language: generic
+      env MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+
+
+
 before_script:
 - pip install -r optional_requirements.txt
 # codespell
