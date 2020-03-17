@@ -18,7 +18,7 @@ env:
   include:
     - os: linux
       language: generic
-      env MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+      env: MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
 
 
