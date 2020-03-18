@@ -182,7 +182,7 @@ jobs:
     # python 2.7
 
     - os: osx
-      python: 2.7
+      language: generic
       env:
        - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
@@ -259,7 +259,7 @@ jobs:
     # python 3.8
 
     - os: osx
-      python: 3.8
+      language: generic
       env:
        - TOXENV=py38-bsd_non_root,py38-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
