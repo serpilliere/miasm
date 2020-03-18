@@ -19,6 +19,14 @@ jobs:
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+
+    - os: linux
+      python: 2.7
+      env:
+       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+
+
 #
 #    - os: linux
 #      python: 3.8
@@ -88,12 +96,12 @@ jobs:
 #
 #
 
-    # OSX
-    - os: osx
-      language: generic
-      env:
-       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
-       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+#    # OSX
+#    - os: osx
+#      language: generic
+#      env:
+#       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+#       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 #
 #    - os: osx
 #      language: generic
