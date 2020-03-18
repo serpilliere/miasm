@@ -9,6 +9,11 @@ addons:
       - llvm-6.0
       - llvm-6.0-dev
       - g++-5
+
+env:
+   - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+   - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu"
+
 jobs:
   include:
 
@@ -18,13 +23,11 @@ jobs:
       python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
-       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
     - os: linux
       python: 2.7
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
-       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
 
 #
