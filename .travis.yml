@@ -9,23 +9,17 @@ addons:
       - llvm-6.0
       - llvm-6.0-dev
       - g++-5
-
-env:
-   - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
-   - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu"
-
 jobs:
   include:
 
     # LINUX
+    # python 3.8
 
     - os: linux
       python: 3.8
-
-    - os: linux
-      python: 2.7
-
-
+      env:
+       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 #
 #    - os: linux
 #      python: 3.8
@@ -95,12 +89,103 @@ jobs:
 #
 #
 
-#    # OSX
-#    - os: osx
-#      language: generic
+
+
+    # python 2.7
+
+    - os: linux
+      python: 2.7
+      env:
+       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+#
+#    - os: linux
+#      python: 2.7
 #      env:
-#       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
-#       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o example -t long,python,llvm,gcc,z3,qemu,cparser"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o long"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o qemu -t llvm,gcc"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o qemu -t python,gcc"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o qemu -t python,llvm"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o llvm -t qemu,long"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o gcc -t qemu,long"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o python -t qemu,long"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o z3"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_TEST_EXTRA_ARG="-o cparser"
+#
+#    - os: linux
+#      python: 2.7
+#      env:
+#       - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
+#       - MIASM_EXTENTED_TESTS="ls_x64"
+#
+#
+
+
+
+
+
+
+
+
+
+
+
+    # OSX
+
+    # python 2.7
+
+    - os: osx
+      python: 2.7
+      env:
+       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
+       - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 #
 #    - os: osx
 #      language: generic
@@ -168,6 +253,10 @@ jobs:
 #       - TOXENV=py27-bsd_non_root,py27-bsd_root,codecov
 #       - MIASM_EXTENTED_TESTS="ls_x64"
 #
+
+
+
+
 
 install:
    - pip install -r requirements.txt
