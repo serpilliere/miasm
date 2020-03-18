@@ -250,7 +250,7 @@ jobs:
       language: shell
       osx_image: xcode10.2
       env:
-       - TOXENV=py38-bsd_non_root,py38-bsd_root,codecov
+       - TOXENV=py37-bsd_non_root,py37-bsd_root,codecov
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
 install:
