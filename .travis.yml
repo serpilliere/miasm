@@ -178,10 +178,10 @@ jobs:
 
 
 before_script:
-- pip install --user -r requirements.txt
-- pip install --user -r optional_requirements.txt
+#- pip install --user -r requirements.txt
+#- pip install --user -r optional_requirements.txt
 # codespell
-- "pip install codespell && git ls-files | xargs codespell --ignore-words=.codespell_ignore 2>/dev/null"
+- "pip install --user codespell && git ls-files | xargs codespell --ignore-words=.codespell_ignore 2>/dev/null"
 # install
 - python setup.py build build_ext
 - python setup.py install
