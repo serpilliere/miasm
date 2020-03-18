@@ -19,84 +19,84 @@ jobs:
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o regression -t long,python,llvm,gcc,z3,qemu,cparser"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o example -t long,python,llvm,gcc,z3,qemu,cparser"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o long"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o qemu -t llvm,gcc"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o qemu -t python,gcc"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o qemu -t python,llvm"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o llvm -t qemu,long"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o gcc -t qemu,long"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o python -t qemu,long"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o z3"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_TEST_EXTRA_ARG="-o cparser"
 
     - os: linux
       language: generic
-      python: 2.7
+      python: 3.8
       env:
        - CXX=g++-5 LLVM_CONFIG=llvm-config-6.0
        - MIASM_EXTENTED_TESTS="ls_x64"
