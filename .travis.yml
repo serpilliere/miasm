@@ -184,7 +184,7 @@ before_script:
 - "pip install --user codespell && git ls-files | xargs codespell --ignore-words=.codespell_ignore 2>/dev/null"
 # install
 - python setup.py build build_ext
-- python setup.py install
+- python setup.py install --user
 # extended tests
 - git clone https://github.com/cea-sec/miasm-extended-tests
 script:
