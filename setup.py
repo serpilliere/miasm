@@ -159,6 +159,10 @@ def buil_all():
                   ["miasm/jitter/Jitgcc.c",
                    "miasm/jitter/bn.c",
                   ]),
+        Extension("miasm.runtime",
+                  ["miasm/runtime/udivmodti4.c",
+                   "miasm/runtime/udivti3.c"
+                  ]),
         ]
 
     if is_win:
