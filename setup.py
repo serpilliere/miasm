@@ -161,6 +161,7 @@ def buil_all():
                   ]),
         Extension("miasm.runtime",
                   ["miasm/runtime/udivmodti4.c",
+                   "miasm/runtime/divti3.c",
                    "miasm/runtime/udivti3.c"
                   ]),
         ]
