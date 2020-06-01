@@ -55,11 +55,24 @@ def worker(todo_queue, message_queue, init_args):
 
         # Launch test
         executable = test.executable if test.executable else sys.executable
-        testpy = subprocess.Popen(([executable] +
-                                   init_args + test.command_line),
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  cwd=test.base_dir)
+        env = os.environ
+        env.update(
+            {
+                "LD_LIBRARY_PATH":"/home/serpilliere/projet/test_rust/test_miasm",
+                "PYTHONPATH":"/home/serpilliere/projet/test_rust/test_miasm",
+            }
+        )
+
+        testpy = subprocess.Popen(
+            (
+                [executable] +
+                init_args + test.command_line
+            ),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=test.base_dir,
+            env=env
+        )
         outputs = testpy.communicate()
 
         # Check result
