@@ -103,20 +103,28 @@ class JitCore(object):
 
     def set_block_min_max(self, cur_block):
         "Update cur_block to set min/max address"
+        # XXX
+        return
 
-        if cur_block.lines:
-            cur_block.ad_min = cur_block.lines[0].offset
-            cur_block.ad_max = cur_block.lines[-1].offset + cur_block.lines[-1].l
-        else:
+    def get_block_min_max(self, cur_block):
+        "Update cur_block to set min/max address"
+
+        if cur_block.is_bad():
             # 1 byte block for unknown mnemonic
             offset = self.lifter.loc_db.get_location_offset(cur_block.loc_key)
             cur_block.ad_min = offset
             cur_block.ad_max = offset+1
 
+        else:
+            start, stop = cur_block.get_range()
+            ad_min = start
+            ad_max = stop
+        return ad_min, ad_max
 
     def add_block_to_mem_interval(self, vm, block):
         "Update vm to include block addresses in its memory range"
-        self.blocks_mem_interval += interval([(block.ad_min, block.ad_max - 1)])
+        ad_min, ad_max = self.get_block_min_max(block)
+        self.blocks_mem_interval += interval([(ad_min, ad_max - 1)])
 
         vm.reset_code_bloc_pool()
         for a, b in self.blocks_mem_interval:
@@ -203,7 +211,8 @@ class JitCore(object):
         """
 
         mem_range = interval()
-        mem_range = interval([(block.ad_min, block.ad_max - 1) for block in blocks])
+        datas = [self.get_block_min_max(block) for block in blocks]
+        mem_range = interval([(data[0], data[1] - 1) for data in datas])
         return mem_range
 
     def __updt_jitcode_mem_range(self, vm):
@@ -228,9 +237,10 @@ class JitCore(object):
         # Find concerned blocks
         modified_blocks = set()
         for block in viewvalues(self.loc_key_to_block):
-            if not block.lines:
+            if block.is_bad():
                 continue
-            if block.ad_max <= ad1 or block.ad_min >= ad2:
+            ad_min, ad_max = self.get_block_min_max(block)
+            if ad_max <= ad1 or ad_min >= ad2:
                 # Block not modified
                 pass
             else:
