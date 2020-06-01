@@ -11,6 +11,7 @@ from subprocess import check_call
 from distutils.sysconfig import get_python_inc
 from miasm.jitter import Jitgcc
 from miasm.jitter.jitcore_cc_base import JitCore_Cc_Base, gen_core
+import subprocess
 
 is_win = platform.system() == "Windows"
 
@@ -108,7 +109,28 @@ class JitCore_Gcc(JitCore_Cc_Base):
                     "-o",
                     fname_tmp
                 ] + inc_dir + libs
-                check_call(args)
+                open('/tmp/ooo', 'w').write(str(args))
+                #check_call(args)
+                args = ["/bin/cc"] +args[1:]
+                print(args)
+                env = os.environ
+                env.update(
+                    {
+                        "LD_LIBRARY_PATH":"/home/serpilliere/projet/test_rust/test_miasm",
+                        "PYTHONPATH":"/home/serpilliere/projet/test_rust/test_miasm",
+                    }
+                )
+                p = subprocess.Popen(
+                    args,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                )
+                (child_stdout,
+                 child_stderr) = (p.stdout, p.stderr)
+                p.wait()
+                print(child_stdout.readlines())
+                print(child_stderr.readlines())
 
             # Move temporary file to final file
             try:
