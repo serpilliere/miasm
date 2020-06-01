@@ -91,6 +91,12 @@ class AsmBlock(object):
 
     loc_key = property(lambda self:self._loc_key)
 
+    def is_bad(self):
+        """
+        Return True is block is AsmBlockBad
+        """
+        return False
+
     def to_string(self):
         out = []
         out.append(self.loc_db.pretty_str(self.loc_key))
@@ -276,6 +282,12 @@ class AsmBlockBad(AsmBlock):
             self.loc_key,
             error_txt
         )
+
+    def is_bad(self):
+        """
+        Return True is block is AsmBlockBad
+        """
+        return True
 
     def addline(self, *args, **kwargs):
         raise RuntimeError("An AsmBlockBad cannot have line")
