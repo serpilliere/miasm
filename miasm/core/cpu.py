@@ -1002,8 +1002,8 @@ class instruction(object):
         o = "%-10s " % self.name
         args = []
         for i, arg in enumerate(self.args):
-            if not isinstance(arg, m2_expr.Expr):
-                raise ValueError('zarb arg type')
+            #if not isinstance(arg, m2_expr.Expr):
+            #    raise ValueError('zarb arg type')
             x = self.arg2str(arg, i, loc_db)
             args.append(x)
         o += self.gen_args(args)
