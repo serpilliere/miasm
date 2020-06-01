@@ -218,7 +218,7 @@ class Jitter(object):
         self.vm = VmMngr.Vm()
         self.cpu = jcore.JitCpu()
         self.lifter = lifter
-        self.bs = bin_stream_vm(self.vm.vmmngr)
+        self.bs = bin_stream_vm(self.vm.vmmngr).get_binstream()
         self.ircfg = self.lifter.new_ircfg()
 
         self.symbexec = EmulatedSymbExec(
@@ -233,6 +233,8 @@ class Jitter(object):
                 from miasm.jitter.jitcore_python import JitCore_Python as JitCore
             elif jit_type == "gcc":
                 from miasm.jitter.jitcore_gcc import JitCore_Gcc as JitCore
+            elif jit_type == "llvm_rs":
+                from miasm.jitter.jitcore_llvm_rs import JitCore_LLVM_RS as JitCore
             else:
                 raise ValueError("Unknown jitter %s" % jit_type)
         except ImportError:
