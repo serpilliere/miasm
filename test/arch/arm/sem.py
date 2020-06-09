@@ -13,6 +13,7 @@ from miasm.arch.arm.sem import Lifter_Arml as Lifter
 from miasm.arch.arm.regs import *
 from miasm.expression.expression import *
 from miasm.core.locationdb import LocationDB
+from miasm.core.bin_stream import bin_stream_str
 from pdb import pm
 
 logging.getLogger('cpuhelper').setLevel(logging.ERROR)
@@ -33,7 +34,7 @@ def compute(asm, inputstate={}, debug=False):
     symexec = SymbolicExecutionEngine(lifter, sympool)
     instr = mn.fromstring(asm, loc_db, "l")
     code = mn.asm(instr)[0]
-    instr = mn.dis(code, "l")
+    instr = mn.dis(bin_stream_str(code).get_binstream(), "l")
     instr.offset = inputstate.get(PC, 0)
     lbl = lifter.add_instr_to_ircfg(instr, ircfg)
     symexec.run_at(ircfg, lbl)

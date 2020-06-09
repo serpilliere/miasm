@@ -102,7 +102,7 @@ for mode, s, l, in reg_tests:
     for x in mn_ppc.asm(l):
         print('(%r, "XXXXXXXX    %s", "%s"),' % (mode, l, encode_hex(x)))
     print("%s %r" % (mode, b))
-    mn = mn_ppc.dis(b, mode)
+    mn = mn_ppc.dis(bin_stream_str(b).get_binstream(), mode)
     print("dis args %s" % [(str(x), x.size) for x in mn.args])
     print(s)
     print(mn)
@@ -118,7 +118,7 @@ for mode, s, l, in reg_tests:
     print('test re dis')
     for x in a:
         print(repr(x))
-        rl = mn_ppc.dis(x, mode)
+        rl = mn_ppc.dis(bin_stream_str(x).get_binstream(), mode)
         assert(str(rl).strip(' ') == s)
     print("%r %s" % (b, a))
     assert(b in a)
