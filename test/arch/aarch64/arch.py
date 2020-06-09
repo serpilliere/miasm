@@ -3,6 +3,7 @@ import sys
 import time
 from pdb import pm
 from miasm.core.utils import decode_hex
+from miasm.core.bin_stream import bin_stream_str
 from miasm.arch.aarch64.arch import *
 from miasm.core.locationdb import LocationDB
 
@@ -1850,7 +1851,7 @@ for s, l in reg_tests_aarch64[:]:
     print(s[:12], l)
     s = s[12:]
     b = h2i((l))
-    mn = mn_aarch64.dis(b, 'l')
+    mn = mn_aarch64.dis(bin_stream_str(b).get_binstream(), 'l')
     print([str(x) for x in mn.args])
     print(s)
     print(mn)

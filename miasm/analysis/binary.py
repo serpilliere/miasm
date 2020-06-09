@@ -222,7 +222,7 @@ class ContainerUnknown(Container):
     "Container abstraction for unknown format"
 
     def parse(self, data, vm=None, addr=0, **kwargs):
-        self._bin_stream = bin_stream_str(data, base_address=addr)
+        self._bin_stream = bin_stream_str(data, base_address=addr).get_binstream()
         if vm is not None:
             vm.add_memory_page(
                 addr,

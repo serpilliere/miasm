@@ -243,10 +243,11 @@ class DeadRemoval(object):
         for index, assignblk in enumerate(block):
             for lval, rval in viewitems(assignblk):
                 if (lval.is_mem() or
-                    irarch.IRDst == lval or
+                    self.ir_arch.IRDst == lval or
                     lval.is_id("exception_flags") or
                     is_function_call(rval)):
-                    useful.add(AssignblkNode(block_lbl, index, lval))
+                    useful.add(AssignblkNode(block.loc_key, index, lval))
+        return useful
 
     def is_tracked_var(self, lval, variable):
         new_lval = self.expr_to_original_expr.get(lval, lval)

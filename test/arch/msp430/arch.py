@@ -3,6 +3,7 @@ from __future__ import print_function
 import time
 from pdb import pm
 from miasm.core.utils import decode_hex, encode_hex
+from miasm.core.bin_stream import bin_stream_str
 from miasm.arch.msp430.arch import *
 from miasm.core.locationdb import LocationDB
 
@@ -93,7 +94,7 @@ for s, l in reg_tests_msp:
     s = s[8:]
     b = h2i((l))
     print(repr(b))
-    mn = mn_msp430.dis(b, None)
+    mn = mn_msp430.dis(bin_stream_str(b).get_binstream(), None)
     print([str(x) for x in mn.args])
     print(s)
     print(mn)

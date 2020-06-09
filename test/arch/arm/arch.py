@@ -3,6 +3,7 @@ import time
 
 from miasm.core.utils import decode_hex, encode_hex
 from miasm.arch.arm.arch import *
+from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
 from pdb import pm
 
@@ -721,7 +722,7 @@ for s, l in reg_tests_armt:
     s = s[12:]
     b = h2i((l))
     print(encode_hex(b))
-    mn = mn_armt.dis(b, 'l')
+    mn = mn_armt.dis(bin_stream_str(b).get_binstream(), 'l')
     print([str(x) for x in mn.args])
     print(s)
     print(mn)
@@ -745,12 +746,12 @@ for s, l in reg_tests_arm:
 
 while len(o) < 1000:
     o += o
-bs = bin_stream_str(o)
+bs = bin_stream_str(o).get_binstream()
 off = 0
 instr_num = 0
 ts = time.time()
 while off < bs.getlen():
-    mn = mn_arm.dis(bs, 'l', off)
+    mn = mn_arm.dis(bs), 'l', off)
     instr_num += 1
     off += 4
 print('instr per sec:', instr_num // (time.time() - ts))
