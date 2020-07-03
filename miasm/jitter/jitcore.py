@@ -153,7 +153,7 @@ class JitCore(object):
 
         # Disassemble it
         cur_block = self.mdis.dis_block(addr)
-        if isinstance(cur_block, AsmBlockBad):
+        if cur_block.is_bad():#isinstance(cur_block, AsmBlockBad):
             return cur_block
         # Logging
         if self.log_newbloc:
