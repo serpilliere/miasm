@@ -17,6 +17,7 @@ from miasm_rs import ExprVisitor
 
 from miasm_rs import JitterX86
 from miasm_rs import DisasmEngineX86
+from miasm.jitter.csts import *
 
 
 is_win = platform.system() == "Windows"
@@ -144,11 +145,11 @@ class JitCore_LLVM_RS(jitcore.JitCore):
             # Need to JiT the block
             cur_block = self.disasm_and_jit_block(offset, cpu.vmmngr)
             if cur_block.is_bad():#isinstance(cur_block, AsmBlockBad):
-                fds
                 errno = cur_block.errno
-                if errno == AsmBlockBad.ERROR_IO:
+                if errno == 3:#AsmBlockBad.ERROR_IO:
+                    print("IOError")
                     cpu.vmmngr.set_exception(EXCEPT_ACCESS_VIOL)
-                elif errno == AsmBlockBad.ERROR_CANNOT_DISASM:
+                elif errno == 0:#AsmBlockBad.ERROR_CANNOT_DISASM:
                     cpu.set_exception(EXCEPT_UNK_MNEMO)
                 else:
                     raise RuntimeError("Unhandled disasm result %r" % errno)
