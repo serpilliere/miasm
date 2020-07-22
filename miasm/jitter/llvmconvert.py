@@ -22,7 +22,7 @@ import warnings
 from future.utils import viewitems, viewvalues
 
 from miasm.expression.expression import ExprId, ExprInt, ExprMem, ExprSlice, \
-    ExprCond, ExprLoc, ExprOp, ExprCompose, LocKey, Expr, \
+    ExprCond, ExprLoc, ExprOp, ExprCompose, LocKey, \
     TOK_EQUAL, \
     TOK_INF_SIGNED, TOK_INF_UNSIGNED, \
     TOK_INF_EQUAL_SIGNED, TOK_INF_EQUAL_UNSIGNED
