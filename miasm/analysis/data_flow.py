@@ -387,7 +387,7 @@ class DeadRemoval(object):
             for idx, assignblk in enumerate(block):
                 new_assignblk = dict(assignblk)
                 for lval in assignblk:
-                    if AssignblkNode(block.loc_key, idx, lval) not in useful:
+                    if (AssignblkNode(block.loc_key, idx, lval) not in useful) or (lval == self.ir_arch.pc):
                         del new_assignblk[lval]
                         modified = True
                 irs.append(AssignBlock(new_assignblk, assignblk.instr))
