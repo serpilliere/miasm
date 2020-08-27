@@ -84,6 +84,7 @@ class JitCore_LLVM_RS(jitcore.JitCore):
             expr_simp,
             regs_offset,
             ir_arch.arch.regs.RIP,
+            ir_arch.IRDst.size,
             0
         )
 
