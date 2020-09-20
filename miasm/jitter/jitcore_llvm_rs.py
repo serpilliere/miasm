@@ -71,21 +71,24 @@ class JitCore_LLVM_RS(jitcore.JitCore):
             )
             #libs_to_load.append(jit_lib)
         except KeyError:
-            fds
+            raise ValueError("Cannot find jitter %s", self.ir_arch.arch.name)
 
         mod_name = jit_lib
-        #mod_name = "miasm.jitter.arch.JitCore_%s" % (myjit.ir_arch.arch.name)
         mod_name = "miasm.jitter.arch.JitCore_%s" % (ir_arch.arch.name)
         mod = importlib.import_module(mod_name)
         regs_offset = mod.get_gpreg_offset_all()
 
+        libs = [
+            mod.__file__,
+        ]
         jitter_x86 = JitterX86(
             lifter_x86,
             expr_simp,
             regs_offset,
             ir_arch.arch.regs.RIP,
             ir_arch.IRDst.size,
-            0
+            0,
+            libs,
         )
 
 
