@@ -1575,8 +1575,8 @@ class DelDummyPhi(object):
     def del_dummy_phi(self, ssa, head):
         ids_to_src = {}
         def_to_loc = {}
-        for block in viewvalues(ssa.graph.blocks):
-            for index, assignblock in enumerate(block):
+        for block in ssa.graph.iter():
+            for index, assignblock in enumerate(block.iter()):
                 for dst, src in viewitems(assignblock):
                     if not dst.is_id():
                         continue
@@ -1585,8 +1585,7 @@ class DelDummyPhi(object):
 
 
         modified = False
-        for loc_key in ssa.graph.blocks.keys():
-            block = ssa.graph.blocks[loc_key]
+        for block in ssa.graph.iter():
             if not irblock_has_phi(block):
                 continue
             assignblk = block[0]
@@ -1607,7 +1606,7 @@ class DelDummyPhi(object):
                 # Remove all implicated phis
                 for dst in to_del:
                     loc_key = def_to_loc[dst]
-                    block = ssa.graph.blocks[loc_key]
+                    block = ssa.graph.get_block(loc_key)
 
                     assignblk = block[0]
                     fixed_phis = {}
@@ -1616,7 +1615,7 @@ class DelDummyPhi(object):
                             continue
                         fixed_phis[old_dst] = old_phi_src
 
-                    assignblks = list(block)
+                    assignblks = list(block.iter())
                     assignblks[0] = AssignBlock(fixed_phis, assignblk.instr)
                     assignblks[1:1] = [AssignBlock({dst: true_value}, assignblk.instr)]
                     new_irblock = IRBlock(block.loc_db, block.loc_key, assignblks)
