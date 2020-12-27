@@ -1622,7 +1622,7 @@ class DelDummyPhi(object):
                     assignblks[0] = AssignBlock(fixed_phis, assignblk.instr)
                     assignblks[1:1] = [AssignBlock({dst: true_value}, assignblk.instr)]
                     new_irblock = IRBlock(block.loc_db, block.loc_key, assignblks)
-                    ssa.graph.blocks[loc_key] = new_irblock
+                    ssa.graph.set_block(loc_key, new_irblock)
                 modified = True
         return modified
 
