@@ -89,6 +89,7 @@ def buil_all():
         "miasm/arch",
         "miasm/arch/x86",
         "miasm/arch/arm",
+        "miasm/arch/m68k",
         "miasm/arch/aarch64",
         "miasm/arch/msp430",
         "miasm/arch/mep",
@@ -195,6 +196,17 @@ def buil_all():
                 "miasm/jitter/arch/JitCore_ppc32.h",
                 "miasm/jitter/arch/JitCore_ppc32_regs.h",
                 "miasm/jitter/bn.h",
+            ]
+        ),
+        Extension(
+            "miasm.jitter.arch.JitCore_m68k",
+            [
+                "miasm/jitter/JitCore.c",
+                "miasm/jitter/vm_mngr.c",
+                "miasm/jitter/vm_mngr_py.c",
+                "miasm/jitter/op_semantics.c",
+                "miasm/jitter/bn.c",
+                "miasm/jitter/arch/JitCore_m68k.c"
             ]
         ),
         Extension("miasm.jitter.Jitllvm",

@@ -15,7 +15,7 @@ from miasm.core.bin_stream import bin_stream_vm
 from miasm.jitter.emulatedsymbexec import EmulatedSymbExec
 from miasm.jitter.codegen import CGen
 from miasm.jitter.jitcore_cc_base import JitCore_Cc_Base
-
+from miasm.expression.expression import ExprId
 hnd = logging.StreamHandler()
 hnd.setFormatter(logging.Formatter("[%(levelname)-8s]: %(message)s"))
 log = logging.getLogger('jitload.py')
@@ -209,11 +209,10 @@ class Jitter(object):
             - "python"
         """
 
-        self.arch = lifter.arch
-        self.attrib = lifter.attrib
-        arch_name = lifter.arch.name  # (lifter.arch.name, lifter.attrib)
+        #self.arch = lifter.arch
+        #self.attrib = lifter.attrib
+        arch_name = "m68k"#lifter.arch.name  # (lifter.arch.name, lifter.attrib)
         self.running = False
-
         try:
             if arch_name == "x86":
                 from miasm.jitter.arch import JitCore_x86 as jcore
@@ -232,6 +231,8 @@ class Jitter(object):
                 from miasm.jitter.arch import JitCore_ppc32 as jcore
             elif arch_name == "mep":
                 from miasm.jitter.arch import JitCore_mep as jcore
+            elif arch_name == "m68k":
+                from miasm.jitter.arch import JitCore_m68k as jcore
             else:
                 raise ValueError("unknown jit arch: %s" % arch_name)
         except ImportError:
@@ -241,7 +242,7 @@ class Jitter(object):
         self.cpu = jcore.JitCpu()
         self.lifter = lifter
         self.bs = bin_stream_vm(self.vm.vmmngr).get_binstream()
-        self.ircfg = self.lifter.new_ircfg()
+        #self.ircfg = self.lifter.new_ircfg()
 
         self.symbexec = EmulatedSymbExec(
             self.cpu, self.vm, self.lifter, {}
@@ -475,7 +476,7 @@ class Jitter(object):
             PAGE_READ | PAGE_WRITE,
             b"\x00" * self.stack_size,
             "Stack")
-        sp = self.arch.getsp(self.attrib)
+        sp = ExprId("SP", 32)#self.arch.getsp(self.attrib)
         setattr(self.cpu, sp.name, self.stack_base + self.stack_size)
         # regs = self.cpu.get_gpreg()
         # regs[sp.name] = self.stack_base+self.stack_size

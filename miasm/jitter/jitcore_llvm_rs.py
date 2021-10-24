@@ -7,20 +7,26 @@ import sysconfig
 import miasm.jitter.jitcore as jitcore
 import platform
 
+from miasm.expression.expression import *
+
 # Rs modules
 import miasm_rs
 from miasm_rs import LifterX86
+from miasm_rs import LifterM68k
 from miasm_rs import LocationDB
 from miasm_rs import add_explicit_rules
 from miasm_rs import ExprRules
 from miasm_rs import ExprVisitor
 
 from miasm_rs import JitterX86
+from miasm_rs import JitterM68k
 from miasm_rs import DisasmEngineX86
+from miasm_rs import DisasmEngineM68k
 from miasm.jitter.csts import *
 
 
 is_win = platform.system() == "Windows"
+
 
 class JitCore_LLVM_RS(jitcore.JitCore):
     "JiT management, using LLVM as backend"
@@ -33,10 +39,12 @@ class JitCore_LLVM_RS(jitcore.JitCore):
         "mips32": "JitCore_mips32",
         "aarch64": "JitCore_aarch64",
         "ppc32": "JitCore_ppc32",
+        "m68k": "JitCore_m68k",
     }
 
     def __init__(self, ir_arch, bin_stream):
         super(JitCore_LLVM_RS, self).__init__(ir_arch, bin_stream)
+        #self.ir_arch.arch.name = "m68k"
         self.bin_stream = bin_stream
 
         self.options.update(
@@ -48,11 +56,11 @@ class JitCore_LLVM_RS(jitcore.JitCore):
             }
         )
 
-        opsize = ir_arch.attrib
+        opsize = 32#ir_arch.attrib
 
         # Init rust functions
         loc_db = self.ir_arch.loc_db
-        lifter_x86 = LifterX86(loc_db, opsize)
+        lifter_m68k = LifterM68k(loc_db, opsize)
 
         expr_rules = ExprRules()
         add_explicit_rules(expr_rules)
@@ -67,42 +75,42 @@ class JitCore_LLVM_RS(jitcore.JitCore):
             ext = ".so" if not is_win else ".pyd"
         try:
             jit_lib = os.path.join(
-                lib_dir, self.arch_dependent_libs[self.ir_arch.arch.name] + ext
+                lib_dir, self.arch_dependent_libs["m68k"] + ext
             )
             #libs_to_load.append(jit_lib)
         except KeyError:
-            raise ValueError("Cannot find jitter %s", self.ir_arch.arch.name)
+            raise ValueError("Cannot find jitter %s", "m68k")
 
         mod_name = jit_lib
-        mod_name = "miasm.jitter.arch.JitCore_%s" % (ir_arch.arch.name)
+        mod_name = "miasm.jitter.arch.JitCore_%s" % ("m68k")
         mod = importlib.import_module(mod_name)
         regs_offset = mod.get_gpreg_offset_all()
 
         libs = [
             mod.__file__,
         ]
-        jitter_x86 = JitterX86(
-            lifter_x86,
+        jitter_m68k = JitterM68k(
+            lifter_m68k,
             expr_simp,
             regs_offset,
-            ir_arch.arch.regs.RIP,
-            ir_arch.IRDst.size,
+            ExprId("PC", 32),#ir_arch.arch.regs.RIP,
+            ir_arch.irdst.size,
             0,
             libs,
         )
 
 
-        mdis = DisasmEngineX86(loc_db, bin_stream, opsize, True)
+        mdis = DisasmEngineM68k(loc_db, bin_stream, opsize, True)
 
         self.expr_simp = expr_simp
-        self.jitter = jitter_x86
+        self.jitter = jitter_m68k
         self.mdis = mdis
         self.exec_wrapper = self.jitter.execute
 
 
     def load(self):
         # Save the current architecture parameters
-        self.arch = self.ir_arch.arch
+        #self.arch = self.ir_arch.arch
         return
 
 

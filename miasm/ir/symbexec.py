@@ -820,7 +820,7 @@ class SymbolicExecutionEngine(object):
         if state is None:
             state = {}
 
-        self.symbols = SymbolMngr(addrsize=lifter.addrsize, expr_simp=sb_expr_simp)
+        self.symbols = SymbolMngr(addrsize=32, expr_simp=sb_expr_simp)
 
         for dst, src in viewitems(state):
             self.symbols.write(dst, src)

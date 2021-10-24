@@ -13,7 +13,7 @@ class Machine(object):
 
     __available = ["arml", "armb", "armtl", "armtb", "sh4", "x86_16", "x86_32",
                    "x86_64", "msp430", "mips32b", "mips32l",
-                   "aarch64l", "aarch64b", "ppc32b", "mepl", "mepb"]
+                   "aarch64l", "aarch64b", "ppc32b", "mepl", "mepb", "m68k"]
 
 
     def __init__(self, machine_name):
@@ -200,13 +200,24 @@ class Machine(object):
             mn = arch.mn_mep
             from miasm.arch.mep.lifter_model_call import LifterModelCallMepl as lifter_model_call
             from miasm.arch.mep.sem import Lifter_MEPl as lifter
+        elif machine_name == "m68k":
+            #from miasm.arch.m68k.disasm import dis_m68k as dis_engine
+            #from miasm.arch.m68k import arch
+            if True:#try:
+                from miasm.arch.m68k import jit
+                jitter = jit.jitter_m68k
+            #except ImportError:
+            #    pass
+            #mn = arch.mn_m68k
+            #from miasm.arch.m68k.lifter_model_call import LifterModelCallM68k as lifter_model_call
+            #from miasm.arch.m68k.sem import Lifter_M68k as lifter
         else:
             raise ValueError('Unknown machine: %s' % machine_name)
 
         # Loggers
         if jit is not None:
             log_jit = jit.log
-        log_arch = arch.log
+        #log_arch = arch.log
 
         self.__dis_engine = dis_engine
         self.__mn = mn
@@ -214,9 +225,9 @@ class Machine(object):
         self.__jitter = jitter
         self.__gdbserver = gdbserver
         self.__log_jit = log_jit
-        self.__log_arch = log_arch
-        self.__base_expr = arch.base_expr
-        self.__lifter = lifter
+        #self.__log_arch = log_arch
+        #self.__base_expr = arch.base_expr
+        #self.__lifter = lifter
         self.__name = machine_name
 
     @property

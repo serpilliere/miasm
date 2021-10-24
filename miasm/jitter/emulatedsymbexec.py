@@ -63,8 +63,9 @@ class EmulatedSymbExec(SymbolicExecutionEngine):
 
     def reset_regs(self):
         """Set registers value to 0. Ignore register aliases"""
-        for reg in self.lifter.arch.regs.all_regs_ids_no_alias:
-            self.symbols.symbols_id[reg] = m2_expr.ExprInt(0, size=reg.size)
+        pass
+        #for reg in self.lifter.arch.regs.all_regs_ids_no_alias:
+        #    self.symbols.symbols_id[reg] = m2_expr.ExprInt(0, size=reg.size)
 
     # Memory management
     def mem_read(self, expr_mem):

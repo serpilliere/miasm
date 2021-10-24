@@ -44,8 +44,8 @@ class JitCore(object):
         """
         # Arch related
         self.lifter = lifter
-        self.ircfg = self.lifter.new_ircfg()
-        self.arch_name = "%s%s" % (self.lifter.arch.name, self.lifter.attrib)
+        #self.ircfg = self.lifter.new_ircfg()
+        self.arch_name = "m68k"#s"%s%s" % (self.lifter.arch.name, self.lifter.attrib)
 
         # Structures for block tracking
         self.offset_to_jitted_func = BoundedDict(self.jitted_block_max_size,
@@ -63,6 +63,7 @@ class JitCore(object):
 
         # Disassembly Engine
         self.split_dis = set()
+        """
         self.mdis = disasmEngine(
             lifter.arch, lifter.attrib, bin_stream,
             lines_wd=self.options["jit_maxline"],
@@ -71,6 +72,7 @@ class JitCore(object):
             dontdis_retcall=False,
             split_dis=self.split_dis,
         )
+        """
 
     @property
     def ir_arch(self):
