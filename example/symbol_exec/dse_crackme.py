@@ -7,21 +7,18 @@ This example should run on the compiled ELF x86 64bits version of
 from __future__ import print_function
 
 #### This part is only related to the run of the sample, without DSE ####
-from builtins import range
 import os
-import subprocess
 import platform
+import subprocess
 from collections import namedtuple
-from pdb import pm
 from tempfile import NamedTemporaryFile
-from future.utils import viewitems
 
-from miasm.core.utils import int_to_byte
-from miasm.jitter.csts import PAGE_READ, PAGE_WRITE
 from miasm.analysis.sandbox import Sandbox_Linux_x86_64
-from miasm.expression.expression import *
-from miasm.os_dep.win_api_x86_32 import get_win_str_a
 from miasm.core.locationdb import LocationDB
+from miasm.core.utils import int_to_byte
+from miasm.expression.expression import *
+from miasm.jitter.csts import PAGE_READ
+from miasm.os_dep.win_api_x86_32 import get_win_str_a
 
 is_win = platform.system() == "Windows"
 
@@ -29,7 +26,8 @@ is_win = platform.system() == "Windows"
 my_FILE_ptr = 0x11223344
 FInfo = namedtuple("FInfo", ["path", "fdesc"])
 FILE_to_info = {}
-TEMP_FILE = NamedTemporaryFile(delete = False)
+TEMP_FILE = NamedTemporaryFile(delete=False)
+
 
 def xxx_fopen(jitter):
     '''
@@ -44,6 +42,7 @@ def xxx_fopen(jitter):
     my_FILE_ptr += 1
     return jitter.func_ret_stdcall(ret_addr, my_FILE_ptr - 1)
 
+
 def xxx_fread(jitter):
     '''
     #include <stdio.h>
@@ -56,6 +55,7 @@ def xxx_fread(jitter):
     jitter.vm.set_mem(args.ptr, data)
     return jitter.func_ret_stdcall(ret_addr, len(data))
 
+
 def xxx_fclose(jitter):
     '''
     #include <stdio.h>
@@ -65,37 +65,6 @@ def xxx_fclose(jitter):
     ret_addr, args = jitter.func_args_systemv(['stream'])
     del FILE_to_info[args.stream]
     return jitter.func_ret_stdcall(ret_addr, 0)
-
-# Create sandbox
-parser = Sandbox_Linux_x86_64.parser(description="ELF sandboxer")
-parser.add_argument("filename", help="ELF Filename")
-parser.add_argument("--strategy",
-                    choices=["code-cov", "branch-cov", "path-cov"],
-                    help="Strategy to use for solution creation",
-                    default="code-cov")
-options = parser.parse_args()
-options.mimic_env = True
-options.command_line = ["%s" % TEMP_FILE.name]
-loc_db = LocationDB()
-sb = Sandbox_Linux_x86_64(loc_db, options.filename, options, globals())
-
-# Init segment
-sb.jitter.lifter.do_stk_segm = True
-sb.jitter.lifter.do_ds_segm = True
-sb.jitter.lifter.do_str_segm = True
-sb.jitter.lifter.do_all_segm = True
-FS_0_ADDR = 0x7ff70000
-sb.jitter.cpu.FS = 0x4
-sb.jitter.cpu.set_segm_base(sb.jitter.cpu.FS, FS_0_ADDR)
-sb.jitter.vm.add_memory_page(
-    FS_0_ADDR + 0x28,
-    PAGE_READ,
-    b"\x42\x42\x42\x42\x42\x42\x42\x42",
-    "Stack canary FS[0x28]"
-)
-
-# Prepare the execution
-sb.jitter.init_run(sb.entry_point)
 
 
 #### This part handle the DSE ####
@@ -119,7 +88,7 @@ class SymbolicFile(object):
         assert self.state == "OPEN"
         out = []
         for i in range(self.position, min(self.position + length,
-                                           self.max_size)):
+                                          self.max_size)):
             if i not in self.gen_bytes:
                 ret = ExprId("SF_%08x_%d" % (id(self), i), 8)
                 self.gen_bytes[i] = ret
@@ -135,6 +104,7 @@ class SymbolicFile(object):
 FILE_to_info_symb = {}
 FILE_stream = ExprId("FILE_0", 64)
 FILE_size = ExprId("FILE_0_size", 64)
+
 
 def xxx_fopen_symb(dse):
     regs = dse.lifter.arch.regs
@@ -155,6 +125,7 @@ def xxx_fopen_symb(dse):
         regs.RIP: ret_addr,
         regs.RAX: ret_value,
     })
+
 
 def xxx_fread_symb(dse):
     regs = dse.lifter.arch.regs
@@ -185,6 +156,7 @@ def xxx_fread_symb(dse):
     })
     dse.update_state(update)
 
+
 def xxx_fclose_symb(dse):
     regs = dse.lifter.arch.regs
     stream = dse.eval_expr(regs.RDI)
@@ -197,6 +169,7 @@ def xxx_fclose_symb(dse):
         regs.RIP: ret_addr,
         regs.RAX: ExprInt(0, regs.RAX.size),
     })
+
 
 # Symbolic naive version of _libc_start_main
 
@@ -218,6 +191,7 @@ def xxx___libc_start_main_symb(dse):
         dse.lifter.pc: main_addr,
     })
 
+
 # Stop the execution on puts and get back the corresponding string
 class FinishOn(Exception):
 
@@ -225,104 +199,142 @@ class FinishOn(Exception):
         self.string = string
         super(FinishOn, self).__init__()
 
+
 def xxx_puts_symb(dse):
     string = get_win_str_a(dse.jitter, dse.jitter.cpu.RDI)
     raise FinishOn(string)
 
 
-todo = set([b""]) # Set of file content to test
+todo = {b""}  # Set of file content to test
 
-# Instantiate the DSE engine
-machine = Machine("x86_64")
-# Convert strategy to the correct value
-strategy = {
-    "code-cov": DSEPathConstraint.PRODUCE_SOLUTION_CODE_COV,
-    "branch-cov": DSEPathConstraint.PRODUCE_SOLUTION_BRANCH_COV,
-    "path-cov": DSEPathConstraint.PRODUCE_SOLUTION_PATH_COV,
-}[options.strategy]
-dse = DSEPathConstraint(machine, loc_db, produce_solution=strategy)
 
-# Attach to the jitter
-dse.attach(sb.jitter)
+def dse(filename, strategy, options):
+    loc_db = LocationDB()
+    sb = Sandbox_Linux_x86_64(loc_db, filename, options, globals())
 
-# Update the jitter state: df is read, but never set
-# Approaches: specific or generic
-# - Specific:
-#   df_value = ExprInt(sb.jitter.cpu.df, dse.lifter.arch.regs.df.size)
-#   dse.update_state({
-#       dse.lifter.arch.regs.df: df_value
-#   })
-# - Generic:
-dse.update_state_from_concrete()
+    # Init segment
+    sb.jitter.lifter.do_stk_segm = True
+    sb.jitter.lifter.do_ds_segm = True
+    sb.jitter.lifter.do_str_segm = True
+    sb.jitter.lifter.do_all_segm = True
+    FS_0_ADDR = 0x7ff70000
+    sb.jitter.cpu.FS = 0x4
+    sb.jitter.cpu.set_segm_base(sb.jitter.cpu.FS, FS_0_ADDR)
+    sb.jitter.vm.add_memory_page(
+        FS_0_ADDR + 0x28,
+        PAGE_READ,
+        b"\x42\x42\x42\x42\x42\x42\x42\x42",
+        "Stack canary FS[0x28]"
+    )
 
-# Add constraint on file size, we don't want to generate too big FILE
-z3_file_size = dse.z3_trans.from_expr(FILE_size)
-dse.cur_solver.add(0 < z3_file_size)
-dse.cur_solver.add(z3_file_size < 0x10)
+    # Prepare the execution
+    sb.jitter.init_run(sb.entry_point)
 
-# Register symbolic stubs for extern functions (xxx_puts_symb, ...)
-dse.add_lib_handler(sb.libs, globals())
+    # Instantiate the DSE engine
+    machine = Machine("x86_64")
+    # Convert strategy to the correct value
+    strategy = {
+        "code-cov": DSEPathConstraint.PRODUCE_SOLUTION_CODE_COV,
+        "branch-cov": DSEPathConstraint.PRODUCE_SOLUTION_BRANCH_COV,
+        "path-cov": DSEPathConstraint.PRODUCE_SOLUTION_PATH_COV,
+    }[strategy]
+    dse = DSEPathConstraint(machine, loc_db, produce_solution=strategy)
 
-# Automatic exploration of solution
+    # Attach to the jitter
+    dse.attach(sb.jitter)
 
-## Save the current clean state, before any computation of the FILE content
-snapshot = dse.take_snapshot()
-found = False
+    # Update the jitter state: df is read, but never set
+    # Approaches: specific or generic
+    # - Specific:
+    #   df_value = ExprInt(sb.jitter.cpu.df, dse.lifter.arch.regs.df.size)
+    #   dse.update_state({
+    #       dse.lifter.arch.regs.df: df_value
+    #   })
+    # - Generic:
+    dse.update_state_from_concrete()
 
-while todo:
-    # Prepare a solution to try, based on the clean state
-    file_content = todo.pop()
-    print("CUR: %r" % file_content)
-    open(TEMP_FILE.name, "wb").write(file_content)
-    dse.restore_snapshot(snapshot, keep_known_solutions=True)
-    FILE_to_info.clear()
-    FILE_to_info_symb.clear()
+    # Add constraint on file size, we don't want to generate too big FILE
+    z3_file_size = dse.z3_trans.from_expr(FILE_size)
+    dse.cur_solver.add(0 < z3_file_size)
+    dse.cur_solver.add(z3_file_size < 0x10)
 
-    # Play the current file
-    try:
-        sb.run()
-    except FinishOn as finish_info:
-        print(finish_info.string)
-        if finish_info.string == "OK":
-            # Stop if the expected result is found
-            found = True
-            break
+    # Register symbolic stubs for extern functions (xxx_puts_symb, ...)
+    dse.add_lib_handler(sb.libs, globals())
 
-    finfo = FILE_to_info_symb[FILE_stream]
-    for sol_ident, model in viewitems(dse.new_solutions):
-        # Build the file corresponding to solution in 'model'
+    # Automatic exploration of solution
 
-        out = []
-        fsize = max(model.eval(dse.z3_trans.from_expr(FILE_size)).as_long(),
-                    len(finfo.gen_bytes))
-        for index in range(fsize):
-            try:
-                byteid = finfo.gen_bytes[index]
-                out.append(int_to_byte(model.eval(dse.z3_trans.from_expr(byteid)).as_long()))
-            except (KeyError, AttributeError) as _:
-                # Default value if there is no constraint on current byte
-                out.append(b"\x00")
+    ## Save the current clean state, before any computation of the FILE content
+    snapshot = dse.take_snapshot()
+    found = False
 
-        todo.add(b"".join(out))
+    while todo:
+        # Prepare a solution to try, based on the clean state
+        file_content = todo.pop()
+        print("CUR: %r" % file_content)
+        open(TEMP_FILE.name, "wb").write(file_content)
+        dse.restore_snapshot(snapshot, keep_known_solutions=True)
+        FILE_to_info.clear()
+        FILE_to_info_symb.clear()
 
-# Assert that the result has been found
-assert found == True
-print("FOUND !")
+        # Play the current file
+        try:
+            sb.run()
+        except FinishOn as finish_info:
+            print(finish_info.string)
+            if finish_info.string == "OK":
+                # Stop if the expected result is found
+                found = True
+                break
 
-TEMP_FILE.close()
+        finfo = FILE_to_info_symb[FILE_stream]
+        for sol_ident, model in viewitems(dse.new_solutions):
+            # Build the file corresponding to solution in 'model'
 
-# Replay for real
-if not is_win:
-    print("Trying to launch the binary without Miasm")
-    crackme = subprocess.Popen([options.filename, TEMP_FILE.name],
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    stdout, stderr = crackme.communicate()
-    assert not stderr
-    os.unlink(TEMP_FILE.name)
-    stdout = stdout.strip()
-    print(stdout)
-    assert stdout == b"OK"
-else:
-    os.unlink(TEMP_FILE.name)
+            out = []
+            fsize = max(model.eval(dse.z3_trans.from_expr(FILE_size)).as_long(),
+                        len(finfo.gen_bytes))
+            for index in range(fsize):
+                try:
+                    byteid = finfo.gen_bytes[index]
+                    out.append(int_to_byte(model.eval(dse.z3_trans.from_expr(byteid)).as_long()))
+                except (KeyError, AttributeError) as _:
+                    # Default value if there is no constraint on current byte
+                    out.append(b"\x00")
 
+            todo.add(b"".join(out))
+
+    # Assert that the result has been found
+    assert found == True
+    print("FOUND !")
+
+    TEMP_FILE.close()
+
+    # Replay for real
+    if not is_win:
+        print("Trying to launch the binary without Miasm")
+        crackme = subprocess.Popen([filename, TEMP_FILE.name],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        stdout, stderr = crackme.communicate()
+        assert not stderr
+        os.unlink(TEMP_FILE.name)
+        stdout = stdout.strip()
+        print(stdout)
+        assert stdout == b"OK"
+    else:
+        os.unlink(TEMP_FILE.name)
+
+
+if __name__ == '__main__':
+    # Create sandbox
+    parser = Sandbox_Linux_x86_64.parser(description="ELF sandboxer")
+    parser.add_argument("filename", help="ELF Filename")
+    parser.add_argument("--strategy",
+                        choices=["code-cov", "branch-cov", "path-cov"],
+                        help="Strategy to use for solution creation",
+                        default="code-cov")
+    options = parser.parse_args()
+    options.mimic_env = True
+    options.command_line = ["%s" % TEMP_FILE.name]
+
+    dse(options.filename, options.strategy, options)

@@ -250,13 +250,13 @@ class mn_ppc(cls_mn):
         return info
 
     @classmethod
-    def getbits(cls, bs, attrib, start, n):
-        if not n:
+    def getbits(cls, bs, attrib, offset, offset_bits, size):
+        if not size:
             return 0
+
+        start = offset * 8 + offset_bits
         o = 0
-        if n > bs.getlen() * 8:
-            raise ValueError('not enough bits %r %r' % (n, len(bs.bin) * 8))
-        while n:
+        while size:
             offset = start // 8
             n_offset = cls.endian_offset(attrib, offset)
             c = cls.getbytes(bs, n_offset, 1)
@@ -265,11 +265,11 @@ class mn_ppc(cls_mn):
             c = ord(c)
             r = 8 - start % 8
             c &= (1 << r) - 1
-            l = min(r, n)
+            l = min(r, size)
             c >>= (r - l)
             o <<= l
             o |= c
-            n -= l
+            size -= l
             start += l
         return o
 

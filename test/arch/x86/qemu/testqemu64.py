@@ -1,9 +1,11 @@
 from __future__ import print_function
-import os
+
+import os.path
 import struct
 import logging
 from sys import stdout
-from pdb import pm
+
+import pytest
 
 try:
     stdout = stdout.buffer
@@ -15,35 +17,39 @@ from miasm.jitter.jitload import log_func
 from miasm.jitter.csts import PAGE_READ, PAGE_WRITE
 from miasm.core.locationdb import LocationDB
 
+
 # Utils
 def parse_fmt(s):
-    fmt = s[:]+"\x00"
+    fmt = s[:] + "\x00"
     out = []
     i = 0
     while i < len(fmt):
-        c = fmt[i:i+1]
+        c = fmt[i:i + 1]
         if c != "%":
-            i+=1
+            i += 1
             continue
-        if fmt[i+1:i+2] == "%":
-            i+=2
+        if fmt[i + 1:i + 2] == "%":
+            i += 2
             continue
         j = 0
-        i+=1
-        while fmt[i+j:i+j+1] in "0123456789$.-":
-            j+=1
-        if fmt[i+j:i+j+1] in ['l']:
-            j +=1
-        if fmt[i+j:i+j+1] == "h":
-            x = fmt[i+j:i+j+2]
+        i += 1
+        while fmt[i + j:i + j + 1] in "0123456789$.-":
+            j += 1
+        if fmt[i + j:i + j + 1] in ['l']:
+            j += 1
+        if fmt[i + j:i + j + 1] == "h":
+            x = fmt[i + j:i + j + 2]
         else:
-            x = fmt[i+j:i+j+1]
-        i+=j
+            x = fmt[i + j:i + j + 1]
+        i += j
         out.append(x)
     return out
 
+
 nb_tests = 1
-def xxx___printf_chk(jitter):
+
+
+def xxx___printf_chk(jitter, expected):
     """Tiny implementation of printf_chk"""
     global nb_tests
     ret_ad, args = jitter.func_args_systemv(["out", "format"])
@@ -64,7 +70,7 @@ def xxx___printf_chk(jitter):
             a = jitter.get_c_str(a)
         elif x in ("x", 'X', 'd', 'z', 'Z'):
             pass
-        elif x.lower() in ("f","l"):
+        elif x.lower() in ("f", "l"):
             a = struct.unpack("d", struct.pack("Q", a))[0]
             i += 1
         else:
@@ -73,7 +79,7 @@ def xxx___printf_chk(jitter):
         i += 1
 
     fmt = fmt.replace("%016z", "%016lx")
-    output = fmt%(tuple(args))
+    output = fmt % (tuple(args))
     # NaN bad repr in Python
     output = output.replace("nan", "-nan")
 
@@ -91,7 +97,8 @@ def xxx___printf_chk(jitter):
     nb_tests += 1
     jitter.func_ret_systemv(ret_ad, 0)
 
-def xxx_puts(jitter):
+
+def xxx_puts(jitter, expected):
     '''
     #include <stdio.h>
     int puts(const char *s);
@@ -108,33 +115,55 @@ def xxx_puts(jitter):
         raise RuntimeError("Bad semantic")
     return jitter.func_ret_systemv(ret_addr, 1)
 
-# Parse arguments
-parser = Sandbox_Linux_x86_64.parser(description="ELF sandboxer")
-parser.add_argument("filename", help="ELF Filename")
-parser.add_argument("funcname", help="Targeted function's name")
-parser.add_argument("expected", help="Expected output")
-options = parser.parse_args()
 
-# Expected output
-expected = open(options.expected)
+def run(options, input_path, expected_path, func_name):
+    # Expected output
+    expected = open(expected_path)
 
-# Create sandbox
-loc_db = LocationDB()
-sb = Sandbox_Linux_x86_64(loc_db, options.filename, options, globals())
-try:
-    addr = sb.elf.getsectionbyname(".symtab")[options.funcname].value
-except AttributeError:
-    raise RuntimeError("The target binary must have a symtab section")
+    # Create sandbox
+    loc_db = LocationDB()
+    sb = Sandbox_Linux_x86_64(loc_db, input_path, options, globals())
+    try:
+        addr = sb.elf.getsectionbyname(".symtab")[func_name].value
+    except AttributeError:
+        raise RuntimeError("The target binary must have a symtab section")
 
-log_func.setLevel(logging.ERROR)
+    log_func.setLevel(logging.ERROR)
 
-# Segmentation
-sb.jitter.cpu.set_segm_base(8, 0x7fff0000)
-sb.jitter.cpu.FS = 8
-sb.jitter.vm.add_memory_page(0x7fff0000 + 0x28, PAGE_READ | PAGE_WRITE, b"AAAAAAAA")
+    # Segmentation
+    sb.jitter.cpu.set_segm_base(8, 0x7fff0000)
+    sb.jitter.cpu.FS = 8
+    sb.jitter.vm.add_memory_page(0x7fff0000 + 0x28, PAGE_READ | PAGE_WRITE, b"AAAAAAAA")
+
+    # Run
+    sb.run(addr)
+
+    assert (sb.jitter.running is False)
 
 
-# Run
-sb.run(addr)
+@pytest.mark.parametrize("instr", [
+    "adc", "and", "bt", "bts", "conv", "inc", "lea", "mul", "not", "rcl", "rol", "sar", "shld", "shrd", "string", "xor",
+    "adc", "btc", "cmp", "jcc", "neg", "rcr", "sbb", "shr", "btr", "misc", "ror", "sub", "dec", "shl", "add", "or",
+])
+def test(instr, jitter_name):
+    func_name = "test_" + instr
+    current_path = os.path.dirname(__file__)
+    input = os.path.join(current_path, "test-x86_64")
+    expected = os.path.join(current_path, "expected_x86_64", func_name + ".exp")
+    print("Input:", input, "\tInstruction", instr, "\tFunction", func_name)
+    print("Expected:", expected)
 
-assert(sb.jitter.running is False)
+    options = Sandbox_Linux_x86_64.parser().parse_args(["--jitter", jitter_name])
+
+    run(options, input, expected, func_name)
+
+
+if __name__ == '__main__':
+    # Parse arguments
+    parser = Sandbox_Linux_x86_64.parser(description="ELF sandboxer")
+    parser.add_argument("filename", help="ELF Filename")
+    parser.add_argument("funcname", help="Targeted function's name")
+    parser.add_argument("expected", help="Expected output")
+    options = parser.parse_args()
+
+    run(options, options.filename, options.expected, options.funcname)

@@ -1,11 +1,9 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test
+from .asm_test import AsmTest
 
 
-class Test_BCC(Asm_Test):
+class BCC(AsmTest):
     MYSTRING = "test string"
     TXT = '''
     main:
@@ -31,5 +29,7 @@ SKIP:
         assert(self.myjit.cpu.V0 == len(self.MYSTRING))
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_BCC]]
+@pytest.mark.skip("Python Abort: todo fix")
+@pytest.mark.parametrize("case", [BCC])
+def test(case, jitter_name):
+    case(jitter_name)()

@@ -1,7 +1,7 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
+
 
 class Test_PMAXU(Asm_Test_32):
     TXT = '''
@@ -22,5 +22,6 @@ class Test_PMAXU(Asm_Test_32):
         assert self.myjit.cpu.MM1 == 0x1122334455667788
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PMAXU]]
+@pytest.mark.parametrize("case", [Test_PMAXU])
+def test(case, jitter_name):
+    case(jitter_name)

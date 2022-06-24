@@ -1,36 +1,27 @@
 from __future__ import print_function
-import sys
+
+import os
 import subprocess
+import sys
 from optparse import OptionParser
-from pdb import pm
+from pathlib import Path
 
 from future.utils import viewitems
 
-from miasm.analysis.machine import Machine
 from miasm.analysis.binary import Container
+from miasm.analysis.machine import Machine
+from miasm.core import parse_asm
+from miasm.core.locationdb import LocationDB
 from miasm.expression.expression import ExprInt, ExprCond, ExprId, \
     get_expr_ids, ExprAssign, ExprLoc
-from miasm.core.bin_stream import bin_stream_str
-from miasm.ir.symbexec import SymbolicExecutionEngine, get_block
 from miasm.expression.simplifications import expr_simp
-from miasm.core import parse_asm
-from miasm.ir.translators.translator  import Translator
-from miasm.core.locationdb import LocationDB
+from miasm.ir.symbexec import SymbolicExecutionEngine, get_block
+from miasm.ir.translators.translator import Translator
 
 machine = Machine("x86_32")
 
 
-parser = OptionParser(usage="usage: %prog [options] file")
-parser.add_option('-a', "--address", dest="address", metavar="ADDRESS",
-                  help="address to disasemble", default="0")
-
-(options, args) = parser.parse_args(sys.argv[1:])
-if not args:
-    parser.print_help()
-    sys.exit(0)
-
-
-def emul_symb(lifter, ircfg, mdis, states_todo, states_done):
+def emul_symb(lifter, ircfg, mdis, states_todo, states_done, ret_addr):
     while states_todo:
         addr, symbols, conds = states_todo.pop()
         print('*' * 40, "addr", addr, '*' * 40)
@@ -79,13 +70,13 @@ def emul_symb(lifter, ircfg, mdis, states_todo, states_done):
             raise ValueError("Unsupported destination")
 
 
-if __name__ == '__main__':
+def solve(filename, address, output):
     loc_db = LocationDB()
     translator_smt2 = Translator.to_language("smt2")
 
-    addr = int(options.address, 16)
+    addr = int(address, 16)
 
-    cont = Container.from_stream(open(args[0], 'rb'), loc_db)
+    cont = Container.from_stream(open(filename, 'rb'), loc_db)
     mdis = machine.dis_engine(cont.bin_stream, loc_db=loc_db)
     lifter = machine.lifter(mdis.loc_db)
     ircfg = lifter.new_ircfg()
@@ -101,7 +92,6 @@ if __name__ == '__main__':
         loc_db
     )
 
-
     argc_lbl = loc_db.get_name_location('argc')
     argv_lbl = loc_db.get_name_location('argv')
     ret_addr_lbl = loc_db.get_name_location('ret_addr')
@@ -111,7 +101,6 @@ if __name__ == '__main__':
     argv_loc = ExprLoc(argv_lbl, 32)
     ret_addr_loc = ExprLoc(ret_addr_lbl, 32)
 
-
     ret_addr = ExprId("ret_addr", ret_addr_loc.size)
 
     fix_args = {
@@ -120,12 +109,10 @@ if __name__ == '__main__':
         ret_addr_loc: ret_addr,
     }
 
-
-
     block = asmcfg.loc_key_to_block(init_lbl)
     for instr in block.lines:
         for i, arg in enumerate(instr.args):
-            instr.args[i]= arg.replace_expr(fix_args)
+            instr.args[i] = arg.replace_expr(fix_args)
     print(block)
 
     # add fake address and len to parsed instructions
@@ -141,7 +128,7 @@ if __name__ == '__main__':
     states_todo.add((addr, symbexec.symbols, ()))
 
     # emul blocks, propagate states
-    emul_symb(lifter, ircfg, mdis, states_todo, states_done)
+    emul_symb(lifter, ircfg, mdis, states_todo, states_done, ret_addr)
 
     all_info = []
 
@@ -164,7 +151,6 @@ if __name__ == '__main__':
         conditions = []
         all_ids = set()
         for expr, value in reqs_cond:
-
             all_ids.update(get_expr_ids(expr))
             expr_test = ExprCond(expr,
                                  ExprInt(1, value.size),
@@ -179,7 +165,7 @@ if __name__ == '__main__':
 
         out += conditions
         out.append('(check-sat)')
-        open('out.dot', 'w').write('\n'.join(out))
+        output.joinpath("out.dot").write_text('\n'.join(out))
         try:
             cases = subprocess.check_output(["/home/serpilliere/tools/stp/stp",
                                              "-p", '--SMTLIB2',
@@ -196,3 +182,16 @@ if __name__ == '__main__':
     all_cases.sort(key=lambda x: (x[0], x[1]))
     for addr, val in all_cases:
         print('Address:', addr, 'is reachable using argc', val)
+
+
+if __name__ == '__main__':
+    parser = OptionParser(usage="usage: %prog [options] file")
+    parser.add_option('-a', "--address", dest="address", metavar="ADDRESS",
+                      help="address to disasemble", default="0")
+
+    (options, args) = parser.parse_args(sys.argv[1:])
+    if not args:
+        parser.print_help()
+        sys.exit(0)
+
+    solve(args[0], options.address, Path())

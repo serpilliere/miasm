@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Major Opcode #15 unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_asm import check_instruction
+from .ut_helpers_asm import check_instruction
 
 
 class TestMajor15(object):
@@ -10,7 +10,7 @@ class TestMajor15(object):
         """Test the DSP instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("DSP $1, $2, 0x3", "f1200003")
@@ -19,13 +19,13 @@ class TestMajor15(object):
         """Test the DSP0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
     def test_DSP1(self):
         """Test the DSP1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
     def test_LDZ(self):
         """Test the LDZ instruction"""
@@ -38,7 +38,7 @@ class TestMajor15(object):
         """Test the AVE instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("AVE $1, $2", "f1210002")
@@ -47,7 +47,7 @@ class TestMajor15(object):
         """Test the ABS instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("ABS $1, $2", "f1210003")
@@ -56,7 +56,7 @@ class TestMajor15(object):
         """Test the MIN instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("MIN $1, $2", "f1210004")
@@ -65,7 +65,7 @@ class TestMajor15(object):
         """Test the MAX instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("MAX $1, $2", "f1210005")
@@ -74,7 +74,7 @@ class TestMajor15(object):
         """Test the MINU instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("MINU $1, $2", "f1210006")
@@ -83,7 +83,7 @@ class TestMajor15(object):
         """Test the MAXU instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("MAXU $1, $2", "f1210007")
@@ -92,7 +92,7 @@ class TestMajor15(object):
         """Test the SADD instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SADD $1, $2", "f1210008")
@@ -101,7 +101,7 @@ class TestMajor15(object):
         """Test the SADDU instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SADDU $1, $2", "f1210009")
@@ -110,7 +110,7 @@ class TestMajor15(object):
         """Test the SSUB instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SSUB $1, $2", "f121000a")
@@ -119,7 +119,7 @@ class TestMajor15(object):
         """Test the SSUBU instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SSUBU $1, $2", "f121000b")
@@ -128,7 +128,7 @@ class TestMajor15(object):
         """Test the CLIP instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("CLIP $1, 0x2", "f1011010")
@@ -137,7 +137,7 @@ class TestMajor15(object):
         """Test the CLIPU instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("CLIPU $1, 0x2", "f1011011")
@@ -206,7 +206,7 @@ class TestMajor15(object):
         """Test the UCI instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("UCI $1, $2, 0x3", "f1220003")
@@ -266,7 +266,7 @@ class TestMajor15(object):
         """Test the SHCPA instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SHCPA $C1, ($2+), 6", "f1251006")
@@ -294,7 +294,7 @@ class TestMajor15(object):
         """Test the LBCPA instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LBCPA $C1, ($2+), 8", "f1254008")
@@ -303,7 +303,7 @@ class TestMajor15(object):
         """Test the LHCPA instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LHCPA $C1, ($2+), 8", "f1255008")
@@ -312,7 +312,7 @@ class TestMajor15(object):
         """Test the LWCPA instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LWCPA $C1, ($2+), 8", "f1256008")
@@ -321,7 +321,7 @@ class TestMajor15(object):
         """Test the LMCPA instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LMCPA $C1, ($2+), 8", "f1257008")
@@ -330,7 +330,7 @@ class TestMajor15(object):
         """Test the SBCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SBCPM0 $C1, ($2+), 8", "f1250808")
@@ -339,7 +339,7 @@ class TestMajor15(object):
         """Test the SHCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SHCPM0 $C1, ($2+), 8", "f1251808")
@@ -348,7 +348,7 @@ class TestMajor15(object):
         """Test the SWCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SWCPM0 $C1, ($2+), 8", "f1252808")
@@ -357,7 +357,7 @@ class TestMajor15(object):
         """Test the SMCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SMCPM0 $C1, ($2+), 8", "f1253808")
@@ -366,7 +366,7 @@ class TestMajor15(object):
         """Test the LBCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LBCPM0 $C1, ($2+), 8", "f1254808")
@@ -375,7 +375,7 @@ class TestMajor15(object):
         """Test the LHCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LHCPM0 $C1, ($2+), 8", "f1255808")
@@ -384,7 +384,7 @@ class TestMajor15(object):
         """Test the LWCPM0 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LWCPM0 $C1, ($2+), 8", "f1256808")
@@ -403,7 +403,7 @@ class TestMajor15(object):
         """Test the SBCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SBCPM1 $C1, ($2+), 8", "f1250c08")
@@ -412,7 +412,7 @@ class TestMajor15(object):
         """Test the SHCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SHCPM1 $C1, ($2+), 8", "f1251c08")
@@ -421,7 +421,7 @@ class TestMajor15(object):
         """Test the SWCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SWCPM1 $C1, ($2+), 8", "f1252c08")
@@ -430,7 +430,7 @@ class TestMajor15(object):
         """Test the SMCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("SMCPM1 $C1, ($2+), 8", "f1253c08")
@@ -439,7 +439,7 @@ class TestMajor15(object):
         """Test the LBCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LBCPM1 $C1, ($2+), 8", "f1254c08")
@@ -448,7 +448,7 @@ class TestMajor15(object):
         """Test the LHCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LHCPM1 $C1, ($2+), 8", "f1255c08")
@@ -457,7 +457,7 @@ class TestMajor15(object):
         """Test the LWCPM1 instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("LWCPM1 $C1, ($2+), 8", "f1256c08")
@@ -475,16 +475,16 @@ class TestMajor15(object):
         """Test the CP instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
-        #check_instruction("CP 0x280780", "f2870780")
+        # check_instruction("CP 0x280780", "f2870780")
 
     def test_CMOV(self):
         """Test the CMOV instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("CMOV $C0, $1", "f017f000")
@@ -496,7 +496,7 @@ class TestMajor15(object):
         """Test the CMOVC instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("CMOVC $C0, $1", "f017f002")
@@ -506,7 +506,7 @@ class TestMajor15(object):
         """Test the CMOVH instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
         # Manually generated instruction
         check_instruction("CMOVH $C0, $1", "f017f100")

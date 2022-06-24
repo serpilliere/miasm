@@ -124,4 +124,3 @@ class Translator(object):
                 self._cache[expr] = ret
                 return ret
         raise ValueError("Unhandled type for %s" % expr)
-

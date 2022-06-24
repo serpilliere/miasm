@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Data cache instructions unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_ir import exec_instruction
+from .ut_helpers_ir import exec_instruction
 
 
 class TestDataCache(object):

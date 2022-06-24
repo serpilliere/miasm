@@ -1,15 +1,16 @@
 """Data flow analysis based on miasm intermediate representation"""
-from builtins import range
 from collections import namedtuple, Counter
-from pprint import pprint as pp
+from typing import Any, Dict, Set, Tuple, Type
+
 from future.utils import viewitems, viewvalues
 from miasm.core.utils import encode_hex
 from miasm.core.graph import DiGraph
-from miasm.ir.ir import AssignBlock, IRBlock
+from miasm.ir.ir import AssignBlock, IRBlock, IRCFG
 from miasm.expression.expression import ExprLoc, ExprMem, ExprId, ExprInt,\
-    ExprAssign, ExprOp, ExprWalk, ExprSlice, \
+    ExprAssign, ExprOp, ExprWalk, Expr, \
     is_function_call, ExprVisitorCallbackBottomToTop
 from miasm.expression.simplifications import expr_simp, expr_simp_explicit
+from miasm.core.locationdb import LocKey
 
 from miasm.core.interval import interval
 from miasm.expression.expression_helper import possible_values
@@ -17,6 +18,7 @@ from miasm.analysis.ssa import get_phi_sources_parent_block, \
     irblock_has_phi
 from miasm.ir.symbexec import get_expr_base_offset
 from collections import deque
+
 
 class ReachingDefinitions(dict):
     """
@@ -46,11 +48,13 @@ class ReachingDefinitions(dict):
     ircfg = None
 
     def __init__(self, ircfg):
+        # type: (IRCFG) -> None
         super(ReachingDefinitions, self).__init__()
         self.ircfg = ircfg
         self.compute()
 
     def get_definitions(self, block_lbl, assignblk_index):
+        # type: (LocKey, int) -> Dict[ExprAssign, Set[Tuple[LocKey, int]]]
         """Returns the dict { lvalue: set((def_block_lbl, def_index)) }
         associated with self.ircfg.@block.assignblks[@assignblk_index]
         or {} if it is not yet computed
@@ -66,6 +70,7 @@ class ReachingDefinitions(dict):
                 modified |= self.process_block(block)
 
     def process_block(self, block):
+        # type: (IRBlock) -> bool
         """
         Fetch reach definitions from predecessors and propagate it to
         the assignblk in block @block.
@@ -88,6 +93,7 @@ class ReachingDefinitions(dict):
         return modified
 
     def process_assignblock(self, block, assignblk_index):
+        # type: (IRBlock, int) -> bool
         """
         Updates the reach definitions with values defined at
         assignblock @assignblk_index in block @block.
@@ -95,9 +101,9 @@ class ReachingDefinitions(dict):
         (@block, @assignblk_index + 1).
         """
 
-        assignblk = block[assignblk_index]
+        assignblk = block[assignblk_index]  # type: AssignBlock
         defs = self.get_definitions(block.loc_key, assignblk_index).copy()
-        for lval in assignblk:
+        for lval in assignblk.keys():
             defs.update({lval: set([(block.loc_key, assignblk_index)])})
 
         modified = self.get((block.loc_key, assignblk_index + 1)) != defs
@@ -132,12 +138,10 @@ class DiGraphDefUse(DiGraph):
 
     """
 
-
     def __init__(self, reaching_defs,
                  deref_mem=False, apply_simp=False, *args, **kwargs):
-        """Instantiate a DiGraph
-        @blocks: IR blocks
-        """
+        # type: (ReachingDefinitions, bool, bool, *Any, **Any) -> None
+        """Instantiate a DiGraph"""
         self._edge_attr = {}
 
         # For dot display
@@ -160,6 +164,7 @@ class DiGraphDefUse(DiGraph):
 
     def _compute_def_use(self, reaching_defs,
                          deref_mem=False, apply_simp=False):
+        # type: (ReachingDefinitions, bool, bool) -> None
         for block in viewvalues(self._blocks):
             self._compute_def_use_block(block,
                                         reaching_defs,
@@ -167,6 +172,7 @@ class DiGraphDefUse(DiGraph):
                                         apply_simp=apply_simp)
 
     def _compute_def_use_block(self, block, reaching_defs, deref_mem=False, apply_simp=False):
+        # type: (IRBlock, ReachingDefinitions, bool, bool) -> None
         for index, assignblk in enumerate(block):
             assignblk_reaching_defs = reaching_defs.get_definitions(block.loc_key, index)
             for lval, expr in viewitems(assignblk):
@@ -242,10 +248,7 @@ class DeadRemoval(object):
         useful = set()
         for index, assignblk in enumerate(block):
             for lval, rval in viewitems(assignblk):
-                if (lval.is_mem() or
-                    self.ir_arch.IRDst == lval or
-                    lval.is_id("exception_flags") or
-                    is_function_call(rval)):
+                if self.is_unkillable_destination(lval, rval):
                     useful.add(AssignblkNode(block.loc_key, index, lval))
         return useful
 
@@ -319,6 +322,7 @@ class DeadRemoval(object):
         return useful
 
     def get_useful_assignments(self, ircfg, defuse, reaching_defs):
+        # type: (IRCFG, DiGraphDefUse, ReachingDefinitions) -> Set[Tuple[int, LocKey, Expr]]
         """
         Mark useful statements using previous reach analysis and defuse
 
@@ -338,7 +342,6 @@ class DeadRemoval(object):
 
             block_useful = self.get_block_useful_destinations(block)
             useful.update(block_useful)
-
 
             successors = ircfg.successors(block_lbl)
             for successor in successors:
@@ -365,16 +368,17 @@ class DeadRemoval(object):
                 yield parent
 
     def do_dead_removal(self, ircfg):
+        # type: (IRCFG) -> bool
         """
         Remove useless assignments.
 
-        This function is used to analyse relation of a * complete function *
+        This function is used to analyse relation of a **complete function**.
         This means the blocks under study represent a solid full function graph.
 
         Source : Kennedy, K. (1979). A survey of data flow analysis techniques.
         IBM Thomas J. Watson Research Division, page 43
 
-        @ircfg: Lifter instance
+        :param ircfg: Lifter instance
         """
 
         modified = False
@@ -386,8 +390,8 @@ class DeadRemoval(object):
             irs = []
             for idx, assignblk in enumerate(block):
                 new_assignblk = dict(assignblk)
-                for lval in assignblk:
-                    if (AssignblkNode(block.loc_key, idx, lval) not in useful) or (lval == self.ir_arch.pc):
+                for lval in assignblk.keys():
+                    if (AssignblkNode(block.loc_key, idx, lval) not in useful) or (lval == self.lifter.pc):
                         del new_assignblk[lval]
                         modified = True
                 irs.append(AssignBlock(new_assignblk, assignblk.instr))
@@ -395,6 +399,8 @@ class DeadRemoval(object):
         return modified
 
     def __call__(self, ircfg):
+        # type: (IRCFG) -> bool
+        """Convenience method to call `do_dead_removal`."""
         ret = self.do_dead_removal(ircfg)
         return ret
 
@@ -500,10 +506,7 @@ def _relink_block_node(ircfg, loc_key, son_loc_key, replace_dct):
         if parent_block is None:
             continue
 
-        new_block = parent_block.modify_exprs(
-            lambda expr:expr.replace_expr(replace_dct),
-            lambda expr:expr.replace_expr(replace_dct)
-        )
+        new_block = parent_block.replace(replace_dct)
 
         # Link parent to new dst
         ircfg.add_uniq_edge(parent, son_loc_key)
@@ -1578,8 +1581,8 @@ class DelDummyPhi(object):
     def del_dummy_phi(self, ssa, head):
         ids_to_src = {}
         def_to_loc = {}
-        for block in ssa.graph.iter():
-            for index, assignblock in enumerate(block.iter()):
+        for block in ssa.graph.blocks.values():
+            for index, assignblock in enumerate(block):
                 for dst, src in viewitems(assignblock):
                     if not dst.is_id():
                         continue
@@ -1588,7 +1591,7 @@ class DelDummyPhi(object):
 
 
         modified = False
-        for block in ssa.graph.iter():
+        for block in ssa.graph.blocks.values():
             if not irblock_has_phi(block):
                 continue
             assignblk = block[0]
@@ -1618,7 +1621,7 @@ class DelDummyPhi(object):
                             continue
                         fixed_phis[old_dst] = old_phi_src
 
-                    assignblks = list(block.iter())
+                    assignblks = list(block)
                     assignblks[0] = AssignBlock(fixed_phis, assignblk.instr)
                     assignblks[1:1] = [AssignBlock({dst: true_value}, assignblk.instr)]
                     new_irblock = IRBlock(block.loc_db, block.loc_key, assignblks)

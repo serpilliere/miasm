@@ -5,11 +5,10 @@ Parse C expression to access variables and retrieve information:
 """
 from __future__ import print_function
 
-from miasm.core.ctypesmngr import CTypeStruct, CAstTypes, CTypePtr
 from miasm.arch.x86.ctype import CTypeAMD64_unk
+from miasm.core.ctypesmngr import CTypeStruct, CAstTypes, CTypePtr
 from miasm.core.objc import CTypesManagerNotPacked, CHandler
 from miasm.expression.expression import ExprId
-
 
 """
 C manipulation example
@@ -52,11 +51,17 @@ c_acceses = ["ptr->width",
              "ptr->line->color",
              "ptr->line->color[3]",
              "ptr->line->size"
-            ]
+             ]
 
-for c_str in c_acceses:
+
+def check(c_str):
     expr = mychandler.c_to_expr(c_str)
     c_type = mychandler.c_to_type(c_str)
     print('C access:', c_str)
     print('\tExpr:', expr)
     print('\tType:', c_type)
+
+
+if __name__ == '__main__':
+    for c_str in c_acceses:
+        check(c_str)

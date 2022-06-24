@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Major Opcode #6 unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_asm import check_instruction
+from .ut_helpers_asm import check_instruction
 
 
 class TestMajor6(object):

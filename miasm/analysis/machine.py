@@ -17,6 +17,7 @@ class Machine(object):
 
 
     def __init__(self, machine_name):
+        # type: (str) -> None
 
         dis_engine = None
         mn = None

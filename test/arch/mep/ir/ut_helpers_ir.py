@@ -23,10 +23,7 @@ def exec_instruction(mn_str, init_values, results, index=0, offset=0):
     instr = mn_mep.fromstring(mn_str, "b")
     instr.mode = "b"
     mn_bin = mn_mep.asm(instr)[index]
-    try:
-        instr = mn_mep.dis(mn_bin, "b")
-    except Disasm_Exception:
-        assert(False)  # miasm don't know what to do
+    instr = mn_mep.dis(mn_bin, "b")
 
     # Specify the instruction offset and compute the destination label
     instr.offset = offset
@@ -72,19 +69,4 @@ def exec_instruction(mn_str, init_values, results, index=0, offset=0):
     if len(results) is not matched_results:
         print("Expected:", results)
         print("Modified:", [r for r in sb.modified(mems=False)])
-        assert(False)
-
-
-def launch_tests(obj):
-    """Call test methods by name"""
-
-    test_methods = [name for name in dir(obj) if name.startswith("test")]
-
-    for method in test_methods:
-        print(method)
-        try:
-            getattr(obj, method)()
-        except AttributeError as e:
-            print("Method not found: %s" % method)
-            assert(False)
-        print('-' * 42)
+        assert False

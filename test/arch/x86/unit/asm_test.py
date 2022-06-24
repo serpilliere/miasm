@@ -1,11 +1,4 @@
-from builtins import str
-from builtins import object
-import sys
-import os
-
-from future.utils import viewitems
-
-from miasm.arch.x86.arch import mn_x86, base_expr, variable
+from miasm.arch.x86.arch import mn_x86
 from miasm.core import parse_asm
 from miasm.expression.expression import *
 from miasm.core import asmblock

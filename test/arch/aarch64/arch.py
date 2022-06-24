@@ -1,15 +1,19 @@
 from __future__ import print_function
-import sys
+
 import time
-from pdb import pm
-from miasm.core.utils import decode_hex
-from miasm.core.bin_stream import bin_stream_str
+
+import pytest
+
 from miasm.arch.aarch64.arch import *
 from miasm.core.locationdb import LocationDB
 
 loc_db = LocationDB()
 
-reg_tests_aarch64 = [
+def h2i(s):
+    return decode_hex(s.replace(' ', ''))
+
+
+@pytest.mark.parametrize("s,l", [
 
     ("XXXXXXXX    MOV        W1, WZR",
      "E1031F2A"),
@@ -1845,18 +1849,8 @@ reg_tests_aarch64 = [
      "1F8708D5"),
     ("XXXXXXXX    YIELD      ",
      "3F2003D5")
-]
-
-
-
-def h2i(s):
-    return decode_hex(s.replace(' ', ''))
-
-
-ts = time.time()
-
-for s, l in reg_tests_aarch64[:]:
-    print("-" * 80)
+])
+def test_reg(s, l):
     print(s[:12], l)
     s = s[12:]
     b = h2i((l))
@@ -1872,4 +1866,3 @@ for s, l in reg_tests_aarch64[:]:
     print(repr(b))
     assert(b in a)
     print(l.to_html())
-

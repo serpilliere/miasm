@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Major Opcode #1 unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_asm import check_instruction
+from .ut_helpers_asm import check_instruction
 
 
 class TestMajor1(object):
@@ -180,7 +180,7 @@ class TestMajor1(object):
         """Test the (RI) instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
     def test_SSARB(self):
         """Test the SSARB instruction"""

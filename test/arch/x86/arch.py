@@ -2,6 +2,8 @@ from __future__ import print_function
 import time
 from pdb import pm
 
+import pytest
+
 from miasm.core.utils import decode_hex, encode_hex
 import miasm.expression.expression as m2_expr
 from miasm.arch.x86.arch import mn_x86, deref_mem_ad, \
@@ -3129,15 +3131,15 @@ reg_tests = [
      "26488910"),
 ]
 
-
 test_file = {
     16: open('regression_test16_ia32.bin', 'wb'),
     32: open('regression_test32_ia32.bin', 'wb'),
     64: open('regression_test64_ia32.bin', 'wb')
 }
-ts = time.time()
-for mode, s, l, in reg_tests:
-    print("-" * 80)
+
+
+@pytest.mark.parametrize("mode,s,l", reg_tests)
+def test_regs(mode, s, l):
     s = s[12:]
     b = decode_hex(l)
     print(mode, repr(b))
@@ -3167,22 +3169,26 @@ for mode, s, l, in reg_tests:
         assert(str(rl).strip(' ') == s)
     print(repr(b), a)
     assert(b in a)
-print('TEST time', time.time() - ts)
 
 
-# speed test thumb
-o = b""
 mode_x = m32
-for mode, s, l, in reg_tests:
-    if mode != mode_x:
-        continue
-    s = s[12:]
-    b = decode_hex(l)
-    o += b
+o = b""
 
-while len(o) < 1000:
-    o += o
-open('x86_speed_reg_test.bin', 'wb').write(o)
+
+def test_speed():
+    global o
+
+    # speed test thumb
+    for mode, s, l, in reg_tests:
+        if mode != mode_x:
+            continue
+        s = s[12:]
+        b = decode_hex(l)
+        o += b
+
+    while len(o) < 1000:
+        o += o
+    open('x86_speed_reg_test.bin', 'wb').write(o)
 
 
 def profile_dis(o):
@@ -3197,16 +3203,20 @@ def profile_dis(o):
         off += mn.l
     print('instr per sec:', instr_num // (time.time() - ts))
 
-import cProfile
-cProfile.run('profile_dis(o)')
 
-# Test instruction representation with prefix
-instr_bytes = b'\x65\xc7\x00\x09\x00\x00\x00'
-bs = bin_stream_str(instr_bytes).get_binstream()
-inst = mn_x86.dis(bs, 32, 0)
-assert(inst.b == instr_bytes)
+def test_profile():
+    import cProfile
+    cProfile.runctx('profile_dis(o)', globals(), locals())
 
-# Test multiple REX prefixes
-for i in range(1, 4):
-    mn = mn_x86.dis(b'\x26' + b'\x48' * i + b'\x89\x10', 64)
-    assert (str(mn).strip() == 'MOV        QWORD PTR ES:[RAX], RDX')
+
+def test_instr_prefix():
+    # Test instruction representation with prefix
+    instr_bytes = b'\x65\xc7\x00\x09\x00\x00\x00'
+    bs = bin_stream_str(instr_bytes).get_binstream()
+    inst = mn_x86.dis(bs, 32, 0)
+    assert(inst.b == instr_bytes)
+
+    # Test multiple REX prefixes
+    for i in range(1, 4):
+        mn = mn_x86.dis(b'\x26' + b'\x48' * i + b'\x89\x10', 64)
+        assert (str(mn).strip() == 'MOV        QWORD PTR ES:[RAX], RDX')

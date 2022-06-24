@@ -1,58 +1,57 @@
 from __future__ import print_function
+
 from miasm.expression.expression import *
-from pdb import pm
-
-print("""
-Expression simplification demo.
-(and regression test)
-""")
 
 
-a = ExprId('a', 32)
-b = ExprId('b', 32)
-c = ExprId('c', 32)
-d = ExprId('d', 32)
-e = ExprId('e', 32)
+def main():
+    a = ExprId('a', 32)
+    b = ExprId('b', 32)
+    c = ExprId('c', 32)
+    d = ExprId('d', 32)
+    e = ExprId('e', 32)
 
-m = ExprMem(a, 32)
-s = a[:8]
+    m = ExprMem(a, 32)
+    s = a[:8]
 
-i1 = ExprInt(0x1, 32)
-i2 = ExprInt(0x2, 32)
-cc = ExprCond(a, b, c)
+    i1 = ExprInt(0x1, 32)
+    i2 = ExprInt(0x2, 32)
+    cc = ExprCond(a, b, c)
 
-o = ExprCompose(a[8:16], a[:8])
+    o = ExprCompose(a[8:16], a[:8])
 
-o2 = ExprCompose(a[8:16], a[:8])
+    o2 = ExprCompose(a[8:16], a[:8])
 
-l = [a[:8], b[:8], c[:8], m[:8], s, i1[:8], i2[:8], o[:8]]
-l2 = l[::-1]
+    l = [a[:8], b[:8], c[:8], m[:8], s, i1[:8], i2[:8], o[:8]]
+    l2 = l[::-1]
 
+    x = ExprMem(a + b + ExprInt(0x42, 32), 32)
 
-x = ExprMem(a + b + ExprInt(0x42, 32), 32)
+    def replace_expr(e):
+        dct = {c + ExprInt(0x42, 32): d,
+               a + b: c, }
+        if e in dct:
+            return dct[e]
+        return e
 
+    print(x)
+    y = x.visit(replace_expr)
+    print(y)
 
-def replace_expr(e):
-    dct = {c + ExprInt(0x42, 32): d,
-           a + b: c, }
-    if e in dct:
-        return dct[e]
-    return e
+    z = ExprCompose(a[5:5 + 8], b[:16], x[:8])
+    print(z)
+    print(z[:31].visit(replace_expr))
 
-
-print(x)
-y = x.visit(replace_expr)
-print(y)
-
-
-z = ExprCompose(a[5:5 + 8], b[:16], x[:8])
-print(z)
-print(z[:31].visit(replace_expr))
-
-print('replace')
-print(x.replace_expr({c + ExprInt(0x42, 32): d,
-                      a + b: c, }))
-print(z.replace_expr({c + ExprInt(0x42, 32): d,
-                      a + b: c, }))
+    print('replace')
+    print(x.replace_expr({c + ExprInt(0x42, 32): d,
+                          a + b: c, }))
+    print(z.replace_expr({c + ExprInt(0x42, 32): d,
+                          a + b: c, }))
 
 
+if __name__ == '__main__':
+    print("""
+    Expression simplification demo.
+    (and regression test)
+    """)
+
+    main()

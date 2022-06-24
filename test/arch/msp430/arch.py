@@ -1,9 +1,7 @@
 from __future__ import print_function
 
-import time
-from pdb import pm
-from miasm.core.utils import decode_hex, encode_hex
-from miasm.core.bin_stream import bin_stream_str
+import pytest
+
 from miasm.arch.msp430.arch import *
 from miasm.core.locationdb import LocationDB
 
@@ -87,10 +85,9 @@ reg_tests_msp = [
 
 ]
 
-ts = time.time()
 
-for s, l in reg_tests_msp:
-    print("-" * 80)
+@pytest.mark.parametrize("s,l", reg_tests_msp)
+def test_regs(s,l):
     s = s[8:]
     b = h2i((l))
     print(repr(b))

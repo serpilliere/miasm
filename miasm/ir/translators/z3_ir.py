@@ -38,7 +38,7 @@ class Z3Mem(object):
         import z3
 
         if endianness not in ['<', '>']:
-            raise ValueError("Endianness should be '>' (big) or '<' (little)")
+            raise ValueError("Endianness should be '>' (big) or '<' (little), found: " + repr(endianness))
         self.endianness = endianness
         self.mems = {} # Address size -> memory z3.Array
         self.name = name

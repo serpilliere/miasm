@@ -47,7 +47,6 @@ Here are a few remainings TODO:
    the solver for reducing the possible values thanks to its accumulated
    constraints.
 """
-from builtins import range
 from collections import namedtuple
 import warnings
 
@@ -59,6 +58,7 @@ except:
 from future.utils import viewitems
 
 from miasm.core.utils import encode_hex, force_bytes
+from miasm.core.locationdb import LocationDB
 from miasm.expression.expression import ExprMem, ExprInt, ExprCompose, \
     ExprAssign, ExprId, ExprLoc, LocKey, canonize_to_exprloc
 from miasm.core.bin_stream import bin_stream_vm
@@ -67,6 +67,7 @@ from miasm.expression.expression_helper import possible_values
 from miasm.ir.translators import Translator
 from miasm.analysis.expression_range import expr_range
 from miasm.analysis.modularintervals import ModularIntervals
+from miasm.analysis.machine import Machine
 
 DriftInfo = namedtuple("DriftInfo", ["symbol", "computed", "expected"])
 
@@ -163,6 +164,7 @@ class DSEEngine(object):
     SYMB_ENGINE = ESETrackModif
 
     def __init__(self, machine, loc_db):
+        # type: (Machine, LocationDB) -> None
         self.machine = machine
         self.loc_db = loc_db
         self.handler = {} # addr -> callback(DSEEngine instance)

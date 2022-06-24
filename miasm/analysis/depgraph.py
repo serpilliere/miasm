@@ -482,7 +482,7 @@ class FilterExprSources(ExprWalk):
             else:
                 self.nofollow.add(expr)
                 return None
-        elif expr.is_function_call():
+        elif expr.is_op() and expr.is_function_call():
             if self.follow_call:
                 self.follow.add(expr)
             else:

@@ -1,39 +1,35 @@
 from __future__ import print_function
-import sys
-from future.utils import viewvalues
-from miasm.analysis.binary import Container
-from miasm.analysis.machine import Machine
-from miasm.core.locationdb import LocationDB
 
-#####################################
-# Common section from dis_binary.py #
-#####################################
+from miasm.ir.ir import IRCFG
+from .dis_binary import *
 
-fdesc = open(sys.argv[1], 'rb')
-loc_db = LocationDB()
 
-cont = Container.from_stream(fdesc, loc_db)
+def lift(input, output):
+    # type: (str, Path) -> IRCFG
+    """
+    Disassembles a binary file and lifts it to IR, then returns the IR control flow graph (IRCFG).
+    :param input: The file to disassemble
+    :return: Its IRCFG
+    """
 
-machine = Machine(cont.arch)
+    # Generate the AsmCFG using dis_binary.py
+    machine, mdis, asmcfg = disassemble(input, output)
 
-mdis = machine.dis_engine(cont.bin_stream, loc_db=cont.loc_db)
+    # Get a Lifter
+    lifter = machine.lifter(mdis.loc_db)
 
-addr = cont.entry_point
-asmcfg = mdis.dis_multiblock(addr)
+    # Get the IR of the asmcfg
+    ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
 
-#####################################
-#    End common section             #
-#####################################
+    # Display each IR basic block
+    print(ircfg)
+    # As with AsmCFGs, they can be accessed individually through ircfg.blocks
 
-# Get a Lifter
-lifter = machine.lifter(mdis.loc_db)
+    # Output ir control flow graph in a dot file
+    output.joinpath("bin_ir_cfg.dot").write_text(ircfg.dot())
 
-# Get the IR of the asmcfg
-ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
+    return ircfg
 
-# Display each IR basic blocks
-for irblock in viewvalues(ircfg.blocks):
-    print(irblock)
 
-# Output ir control flow graph in a dot file
-open('bin_ir_cfg.dot', 'w').write(ircfg.dot())
+if __name__ == '__main__':
+    lift(sys.argv[1], Path())

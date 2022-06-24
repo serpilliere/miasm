@@ -1,7 +1,6 @@
 # Toshiba MeP-c4 - miasm architecture definition
 # Guillaume Valadon <guillaume@valadon.net>
 
-from builtins import range
 from miasm.core.cpu import *
 from miasm.core.utils import Disasm_Exception
 from miasm.expression.expression import ExprId, ExprInt, ExprLoc, \
@@ -185,7 +184,6 @@ class instruction_mep(instruction):
             o += ", %s" % self.arg2str(self.args[1])
             # The third operand is displayed in decimal, not in hex
             o += ", %s" % ExprInt2SignedString(self.args[2], pos_fmt="0x%X")
-            o += ", %s" % ExprInt2SignedString(int(self.args[2]), pos_fmt="0x%X")
 
         elif self.name == "(RI)":
             return o
@@ -303,7 +301,7 @@ class instruction_mep(instruction):
             return
 
         # Adjust the immediate according to the current instruction offset
-        off = expr.arg - self.offset
+        off = int(expr) - self.offset
         if int(off % 2):
             raise ValueError("Strange offset! %r" % off)
         self.args[num] = ExprInt(off, 32)
@@ -447,39 +445,6 @@ class mn_mep(cls_mn):
         """
 
         return SP
-
-    @classmethod
-    def getbits(cls, bitstream, attrib, start, n):
-        """Return an integer of n bits at the 'start' offset
-
-           Note: code from miasm/arch/mips32/arch.py
-        """
-
-        # Return zero if zero bits are requested
-        if not n:
-            return 0
-
-        o = 0  # the returned value
-        while n:
-            # Get a byte, the offset is adjusted according to the endianness
-            offset = start // 8  # the offset in bytes
-            n_offset = cls.endian_offset(attrib, offset)  # the adjusted offset
-            c = cls.getbytes(bitstream, n_offset, 1)
-            if not c:
-                raise IOError
-
-            # Extract the bits value
-            c = ord(c)
-            r = 8 - start % 8
-            c &= (1 << r) - 1
-            l = min(r, n)
-            c >>= (r - l)
-            o <<= l
-            o |= c
-            n -= l
-            start += l
-
-        return o
 
     @classmethod
     def endian_offset(cls, attrib, offset):
@@ -771,7 +736,7 @@ class mep_deref_sp_offset(mep_deref_reg):
         if getattr(self.parent, "imm7_align4", False):
 
             # Get the integer and check the upper bound
-            v = int(self.expr.ptr.args[1].arg)
+            v = int(self.expr.ptr.args[1])
             if v > 0x80:
                 return False
 
@@ -783,7 +748,7 @@ class mep_deref_sp_offset(mep_deref_reg):
         elif getattr(self.parent, "imm7", False):
 
             # Get the integer and check the upper bound
-            v = int(self.expr.ptr.args[1].arg)
+            v = int(self.expr.ptr.args[1])
             if v > 0x80:
                 return False
 
@@ -795,7 +760,7 @@ class mep_deref_sp_offset(mep_deref_reg):
         elif getattr(self.parent, "disp7_align2", False):
 
             # Get the integer and check the upper bound
-            v = int(self.expr.ptr.args[1].arg)
+            v = int(self.expr.ptr.args[1])
             if v > 0x80:
                 return False
 

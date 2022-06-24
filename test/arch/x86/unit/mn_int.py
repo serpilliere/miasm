@@ -1,8 +1,7 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
 from miasm.jitter.csts import EXCEPT_INT_XX
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 
 class Test_INT(Asm_Test_32):
@@ -35,5 +34,6 @@ class Test_INT(Asm_Test_32):
         assert self.myjit.cpu.get_interrupt_num() == 14
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_INT]]
+@pytest.mark.parametrize("case", [Test_INT])
+def test(case, jitter_name):
+    case(jitter_name)

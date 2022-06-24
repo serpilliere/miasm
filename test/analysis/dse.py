@@ -1,6 +1,6 @@
 import sys
-from pdb import pm
 
+import pytest
 from future.utils import viewitems
 
 from miasm.loader.strpatchwork import StrPatchwork
@@ -158,3 +158,8 @@ if __name__ == "__main__":
             DSEAttachInBreakpoint,
     ]:
         test(jit_engine)()
+
+
+@pytest.mark.parametrize("test_case", [DSETest, DSEAttachInBreakpoint])
+def test(test_case, jitter_name):
+    test_case(jitter_name)()

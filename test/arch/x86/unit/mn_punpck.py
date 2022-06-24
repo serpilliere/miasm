@@ -1,7 +1,7 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
+
 
 class Test_PUNPCKHBW(Asm_Test_32):
     TXT = '''
@@ -41,7 +41,6 @@ class Test_PUNPCKHWD(Asm_Test_32):
         assert self.myjit.cpu.MM1 == 0xAABB1122CCDD3344
 
 
-
 class Test_PUNPCKHDQ(Asm_Test_32):
     TXT = '''
     main:
@@ -59,8 +58,6 @@ class Test_PUNPCKHDQ(Asm_Test_32):
     def check(self):
         assert self.myjit.cpu.MM0 == 0x1122334455667788
         assert self.myjit.cpu.MM1 == 0xAABBCCDD11223344
-
-
 
 
 class Test_PUNPCKLBW(Asm_Test_32):
@@ -101,7 +98,6 @@ class Test_PUNPCKLWD(Asm_Test_32):
         assert self.myjit.cpu.MM1 == 0xEEFF556602017788
 
 
-
 class Test_PUNPCKLDQ(Asm_Test_32):
     TXT = '''
     main:
@@ -120,6 +116,8 @@ class Test_PUNPCKLDQ(Asm_Test_32):
         assert self.myjit.cpu.MM0 == 0x1122334455667788
         assert self.myjit.cpu.MM1 == 0xEEFF020155667788
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PUNPCKHBW, Test_PUNPCKHWD, Test_PUNPCKHDQ,
-                                        Test_PUNPCKLBW, Test_PUNPCKLWD, Test_PUNPCKLDQ,]]
+
+@pytest.mark.parametrize("case", [Test_PUNPCKHBW, Test_PUNPCKHWD, Test_PUNPCKHDQ,
+                                        Test_PUNPCKLBW, Test_PUNPCKLWD, Test_PUNPCKLDQ, ])
+def test(case, jitter_name):
+    case(jitter_name)

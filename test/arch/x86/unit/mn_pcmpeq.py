@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 
 class Test_PCMPEQB(Asm_Test_32):
@@ -85,10 +83,11 @@ class Test_PCMPEQQ(Asm_Test_32):
         assert self.myjit.cpu.XMM1 == 0x11223345
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [
+@pytest.mark.parametrize("case", [
         Test_PCMPEQB,
         Test_PCMPEQW,
         Test_PCMPEQD,
         Test_PCMPEQQ,
-    ]]
+    ])
+def test(case, jitter_name):
+    case(jitter_name)

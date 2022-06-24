@@ -1,7 +1,7 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
+
 
 class Test_PSRL(Asm_Test_32):
     TXT = '''
@@ -26,6 +26,7 @@ class Test_PSRL(Asm_Test_32):
         assert self.myjit.cpu.MM1 == 0x0112033405560778
         assert self.myjit.cpu.MM2 == 0x0112233405566778
         assert self.myjit.cpu.MM3 == 0x0112233445566778
+
 
 class Test_PSLL(Asm_Test_32):
     TXT = '''
@@ -52,5 +53,6 @@ class Test_PSLL(Asm_Test_32):
         assert self.myjit.cpu.MM3 == 0x1223344556677880
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PSRL, Test_PSLL]]
+@pytest.mark.parametrize("case", [Test_PSRL, Test_PSLL])
+def test(case, jitter_name):
+    case(jitter_name)

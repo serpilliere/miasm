@@ -47,7 +47,7 @@ class LifterModelCall(Lifter):
                 ExprAssign(self.ret_reg, ExprOp('call_func_ret', addr, self.sp)),
                 ExprAssign(self.sp, ExprOp('call_func_stack', addr, self.sp))
             ],
-            instr
+            instr.to_ir()
         )
         return [call_assignblk], []
 

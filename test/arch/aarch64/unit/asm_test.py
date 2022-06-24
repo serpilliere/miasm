@@ -1,9 +1,4 @@
-import sys
-import os
-
-from future.utils import viewitems
-
-from miasm.arch.aarch64.arch import mn_aarch64, base_expr, variable
+from miasm.arch.aarch64.arch import mn_aarch64
 from miasm.core import parse_asm
 from miasm.expression.expression import *
 from miasm.core import asmblock
@@ -14,7 +9,9 @@ from miasm.core.locationdb import LocationDB
 
 reg_and_id = dict(mn_aarch64.regs.all_regs_ids_byname)
 
-class Asm_Test(object):
+
+class AsmTest:
+
     def __init__(self, jitter):
         self.loc_db = LocationDB()
         self.myjit = Machine("aarch64l").jitter(self.loc_db, jitter)

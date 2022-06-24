@@ -286,6 +286,9 @@ class AsmBlockBad(AsmBlock):
             error_txt
         )
 
+    def __repr__(self):
+        return "<Bad block %s: %s>" % (self.loc_key, self.ERROR_TYPES.get(self._errno, self._errno))
+
     def is_bad(self):
         """
         Return True is block is AsmBlockBad
@@ -342,6 +345,7 @@ class AsmCFG(DiGraph):
 
     @property
     def blocks(self):
+        # type: () -> Iterable[AsmBlock]
         return viewvalues(self._loc_key_to_block)
 
     # Manage graph with associated constraints
@@ -1230,6 +1234,7 @@ class disasmEngine(object):
         self.__dict__.update(kwargs)
 
     def _dis_block(self, offset, job_done=None):
+        # type: (int, Optional[Set]) -> AsmBlock
         """Disassemble the block at offset @offset
         @job_done: a set of already disassembled addresses
         Return the created AsmBlock and future offsets to disassemble
@@ -1375,6 +1380,7 @@ class disasmEngine(object):
         return current_block
 
     def dis_multiblock(self, offset, blocks=None, job_done=None):
+        # type: (int, Optional[AsmBlock], Optional[Set]) -> AsmCFG
         """Disassemble every block reachable from @offset regarding
         specific disasmEngine conditions
         Return an AsmCFG instance containing disassembled blocks

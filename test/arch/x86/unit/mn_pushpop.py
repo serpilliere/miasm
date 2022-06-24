@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_16, Asm_Test_32
+from .asm_test import Asm_Test_16, Asm_Test_32
 from miasm.core.utils import pck16, pck32
 
 
@@ -306,8 +304,7 @@ class Test_POP_mode16_32(Asm_Test_16):
         assert self.myjit.cpu.EAX == self.value
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PUSHA_16, Test_PUSHA_32,
+@pytest.mark.parametrize("case", [Test_PUSHA_16, Test_PUSHA_32,
                                         Test_PUSHAD_16, Test_PUSHAD_32,
                                         Test_PUSH_mode32_32,
                                         Test_PUSH_mode32_16,
@@ -317,5 +314,6 @@ if __name__ == "__main__":
                                         Test_POP_mode32_16,
                                         Test_POP_mode16_16,
                                         Test_POP_mode16_32,
-                                        ]
-    ]
+                                        ])
+def test(case, jitter_name):
+    case(jitter_name)

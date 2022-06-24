@@ -1,12 +1,7 @@
-#-*- coding:utf-8 -*-
-
 from __future__ import print_function
-from builtins import range
-import re
 
-from future.utils import viewitems
+from typing import Tuple
 
-from miasm.core import utils
 from miasm.expression.expression import *
 from pyparsing import *
 from miasm.core.cpu import *
@@ -548,7 +543,8 @@ class instruction_x86(instruction):
         if not isinstance(expr, ExprInt):
             log.warning('dynamic dst %r', expr)
             return
-        self.args[0] = ExprInt(int(expr) - self.offset, self.mode)
+        value = int(expr) - self.offset
+        self.args[0] = ExprInt(value, self.mode) if value > 0 else -ExprInt(-value, self.mode)
 
     def get_info(self, c):
         self.additional_info.g1.value = c.g1.value
@@ -769,6 +765,7 @@ class mn_x86(cls_mn):
 
     @classmethod
     def pre_dis(cls, v, mode, offset):
+        # type: (BinStream, int, int) -> Tuple[Dict, BinStream, int, int, int]
         offset_o = offset
         pre_dis_info = {'opmode': 0,
                         'admode': 0,
@@ -818,7 +815,7 @@ class mn_x86(cls_mn):
                 # multiple REX prefixes case - use last REX prefix
                 x = ord(c)
                 offset += 1
-                c = v.getbytes(offset)
+                c = bytes(v.get_bytes(offset, 1))
             pre_dis_info['rex_p'] = 1
             pre_dis_info['rex_w'] = (x >> 3) & 1
             pre_dis_info['rex_r'] = (x >> 2) & 1
@@ -903,6 +900,10 @@ class mn_x86(cls_mn):
         self.g2.value = pre_dis_info['g2']
         self.prefix = pre_dis_info['prefix']
         return True
+
+    @classmethod
+    def getbits(cls, bs, attrib, offset, offset_bit, size):
+        return bs.get_bits(offset, offset_bit, size)
 
     def post_asm(self, v):
         return v

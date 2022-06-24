@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Major Opcode #0 unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_asm import check_instruction
+from .ut_helpers_asm import check_instruction
 
 
 class TestMajor0(object):
@@ -112,7 +112,7 @@ class TestMajor0(object):
         """Test the (RI) instruction"""
 
         # No samples were found
-        assert(True)
+        assert True
 
     def test_ADVCK3(self):
         """Test the ADVCK3 instruction"""

@@ -36,18 +36,3 @@ def jit_instructions(mn_str):
     jitter.continue_run()
 
     return jitter
-
-
-def launch_tests(obj):
-    """Call test methods by name"""
-
-    test_methods = [name for name in dir(obj) if name.startswith("test")]
-
-    for method in test_methods:
-        print(method)
-        try:
-            getattr(obj, method)()
-        except AttributeError as e:
-            print("Method not found: %s" % method)
-            assert(False)
-        print('-' * 42)

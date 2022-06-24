@@ -1,15 +1,12 @@
-#! /usr/bin/env python2
-from __future__ import print_function
-import sys
+import pytest
 
 from miasm.os_dep.win_api_x86_32_seh import fake_seh_handler, build_teb, \
     set_win_fs_0, return_from_exception, EXCEPTION_PRIV_INSTRUCTION, \
     return_from_seh, DEFAULT_SEH
 from miasm.os_dep.win_32_structs import ContextException
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
-from pdb import pm
 
 class Test_SEH(Asm_Test_32):
     """SEH Handling"""
@@ -60,8 +57,8 @@ class Test_SEH_simple(Test_SEH):
            ContextException.get_offset("eax"))
 
     def check(self):
-        assert(self.myjit.cpu.EAX == 0xcafebabe)
-        assert(self.myjit.cpu.EBX == DEFAULT_SEH)
+        assert (self.myjit.cpu.EAX == 0xcafebabe)
+        assert (self.myjit.cpu.EBX == DEFAULT_SEH)
 
 
 class Test_SEH_double(Test_SEH_simple):
@@ -104,5 +101,6 @@ class Test_SEH_double(Test_SEH_simple):
            ContextException.get_offset("eax"))
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_SEH_simple, Test_SEH_double]]
+@pytest.mark.parametrize("case", [Test_SEH_simple, Test_SEH_double])
+def test(case, jitter_name):
+    case(jitter_name)

@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Coprocessor instructions unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_ir import exec_instruction
+from .ut_helpers_ir import exec_instruction
 
 from miasm.expression.expression import ExprId, ExprMem, ExprInt
 

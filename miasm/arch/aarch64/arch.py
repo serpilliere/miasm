@@ -1,21 +1,16 @@
 #-*- coding:utf-8 -*-
 
-from builtins import range
-from future.utils import viewitems, viewvalues
-
-import logging
-from pyparsing import *
-from miasm.expression import expression as m2_expr
-from miasm.core.cpu import *
 from collections import defaultdict
-from miasm.core.bin_stream import bin_stream
+
+from pyparsing import *
+
 from miasm.arch.aarch64 import regs as regs_module
 from miasm.arch.aarch64.regs import *
-from miasm.core.cpu import log as log_cpu
-from miasm.core.modint import mod_size2int
-from miasm.core.asm_ast import AstInt, AstId, AstMem, AstOp
-from miasm.ir.ir import color_expr_html
 from miasm.core import utils
+from miasm.core.asm_ast import AstInt, AstId, AstOp
+from miasm.core.cpu import *
+from miasm.core.modint import mod_size2int
+from miasm.ir.ir import color_expr_html
 
 log = logging.getLogger("aarch64dis")
 console_handler = logging.StreamHandler()
@@ -524,37 +519,8 @@ class mn_aarch64(cls_mn):
         return info
 
     @classmethod
-    def getbits(cls, bs, attrib, start, n):
-        if not n:
-            return 0
-        o = 0
-        if n > bs.getlen() * 8:
-            raise ValueError('not enough bits %r %r' % (n, len(bs.bin) * 8))
-        while n:
-            offset = start // 8
-            n_offset = cls.endian_offset(attrib, offset)
-            c = cls.getbytes(bs, n_offset, 1)
-            if not c:
-                raise IOError
-            c = ord(c)
-            r = 8 - start % 8
-            c &= (1 << r) - 1
-            l = min(r, n)
-            c >>= (r - l)
-            o <<= l
-            o |= c
-            n -= l
-            start += l
-        return o
-
-    @classmethod
     def endian_offset(cls, attrib, offset):
-        if attrib == "l":
-            return (offset & ~3) + 3 - offset % 4
-        elif attrib == "b":
-            return offset
-        else:
-            raise NotImplementedError('bad attrib')
+        return cls.endian_offset_u8(attrib, offset)
 
     @classmethod
     def check_mnemo(cls, fields):
@@ -612,7 +578,7 @@ class aarch64_gpreg_noarg(reg_noarg):
         return True
 
     def encode(self):
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         if not self.expr.size in self.gpregs_info:
             return False
@@ -633,7 +599,7 @@ class aarch64_gpreg_noarg_nosp(aarch64_gpreg_noarg):
         return True
 
     def encode(self):
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         if not self.expr.size in self.gpregs_info:
             return False
@@ -754,7 +720,7 @@ class aarch64_gpreg0(bsi, aarch64_arg):
             return False
         if not self.expr.size in self.gpregs_info:
             return False
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         if not self.expr in self.gpregs_info[self.expr.size].expr:
             return False
@@ -925,7 +891,7 @@ class aarch64_imm_sf(imm_noarg):
     def encode(self):
         if not isinstance(self.expr, m2_expr.ExprInt):
             return False
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         value = int(self.expr)
         if value >= 1 << self.l:
@@ -944,7 +910,7 @@ class aarch64_imm_sft(aarch64_imm_sf, aarch64_arg):
     def encode(self):
         if not isinstance(self.expr, m2_expr.ExprInt):
             return False
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         value = int(self.expr)
         if value < 1 << self.l:
@@ -988,7 +954,7 @@ class aarch64_gpreg_ext(reg_noarg, aarch64_arg):
         self.value = gpregsz_info[self.expr.size].expr.index(reg)
         option = extend_lst.index(self.expr.op)
         if self.expr.size != OPTION2SIZE[option]:
-            if not test_set_sf(self.parent, self.expr.size):
+            if not check_set_sf(self.parent, self.expr.size):
                 return False
         self.parent.option.value = option
         self.parent.imm.value = int(amount)
@@ -1099,7 +1065,7 @@ class aarch64_gpreg_ext2_128(aarch64_gpreg_ext2):
         return 4
 
 
-def test_set_sf(parent, size):
+def check_set_sf(parent, size):
     if not hasattr(parent, 'sf'):
         return False
     if parent.sf.value == None:
@@ -1115,7 +1081,7 @@ class aarch64_gpreg_sftimm(reg_noarg, aarch64_arg):
 
     def encode(self):
         size = self.expr.size
-        if not test_set_sf(self.parent, size):
+        if not check_set_sf(self.parent, size):
             return False
         if isinstance(self.expr, m2_expr.ExprId):
             if not size in gpregs_info:
@@ -1376,7 +1342,7 @@ class aarch64_imm_nsr(aarch64_imm_sf, aarch64_arg):
     def encode(self):
         if not isinstance(self.expr, m2_expr.ExprInt):
             return False
-        if not test_set_sf(self.parent, self.expr.size):
+        if not check_set_sf(self.parent, self.expr.size):
             return False
         value = int(self.expr)
         if value == 0:

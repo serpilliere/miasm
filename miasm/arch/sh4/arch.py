@@ -1,11 +1,9 @@
 #-*- coding:utf-8 -*-
 
 from __future__ import print_function
-from builtins import range
 
 from pyparsing import *
 from miasm.core.cpu import *
-from miasm.expression.expression import *
 from collections import defaultdict
 import miasm.arch.sh4.regs as regs_module
 from miasm.arch.sh4.regs import *
@@ -514,34 +512,19 @@ class mn_sh4(cls_mn):
         return info
 
     @classmethod
-    def getbits(cls, bs, attrib, start, n):
-        if not n:
-            return 0
-        o = 0
-        if n > bs.getlen() * 8:
-            raise ValueError('not enough bits %r %r' % (n, len(bs.bin) * 8))
-        while n:
-            i = start // 8
-            c = cls.getbytes(bs, i)
-            if not c:
-                raise IOError
-            c = ord(c)
-            r = 8 - start % 8
-            c &= (1 << r) - 1
-            l = min(r, n)
-            c >>= (r - l)
-            o <<= l
-            o |= c
-            n -= l
-            start += l
-        return o
+    def getbits(cls, bs, attrib, offset, offset_bits, size):
+        return super(mn_sh4, cls).getbits(bs, "b", offset, offset_bits, size)
+
+    @classmethod
+    def endian_offset(cls, attrib, offset):
+        return cls.endian_offset_u8(attrib, offset)
 
     @classmethod
     def getbytes(cls, bs, offset, l=1):
         out = b""
         for _ in range(l):
             n_offset = (offset & ~1) + 1 - offset % 2
-            out += bs.getbytes(n_offset, 1)
+            out += bs.get_bytes_exact(n_offset, 1)
             offset += 1
         return out
 

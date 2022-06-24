@@ -1,7 +1,7 @@
 # Toshiba MeP-c4 - Shift instructions unit tests
 # Guillaume Valadon <guillaume@valadon.net>
 
-from ut_helpers_ir import exec_instruction
+from .ut_helpers_ir import exec_instruction
 
 from miasm.expression.expression import ExprId, ExprInt, ExprCond, ExprOp
 from miasm.core.cpu import sign_ext

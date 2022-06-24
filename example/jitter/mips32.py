@@ -1,5 +1,3 @@
-#! /usr/bin/env python2
-#-*- coding:utf-8 -*-
 from __future__ import print_function
 from argparse import ArgumentParser
 from miasm.analysis import debugging
@@ -7,10 +5,10 @@ from miasm.jitter.csts import *
 from miasm.analysis.machine import Machine
 from miasm.core.locationdb import LocationDB
 
-
+machine = Machine("mips32l")
 parser = ArgumentParser(
     description="""Sandbox raw binary with mips32 engine
-(ex: jit_mips32.py example/mips32_sc_l.bin 0)""")
+    (ex: jit_mips32.py example/mips32_sc_l.bin 0)""")
 parser.add_argument("-t", "--trace",
                     help="Log instructions/registers values",
                     action="store_true")
@@ -28,17 +26,17 @@ parser.add_argument("binary",
 parser.add_argument("addr",
                     help="start exec on addr")
 
-machine = Machine("mips32l")
 
 def code_sentinelle(jitter):
     jitter.running = False
     jitter.pc = 0
     return True
 
+
 def jit_mips32_binary(args):
     loc_db = LocationDB()
     filepath, entryp = args.binary, int(args.addr, 0)
-    myjit = machine.jitter(loc_db, jit_type = args.jitter)
+    myjit = machine.jitter(loc_db, jit_type=args.jitter)
     myjit.init_stack()
 
     # Log level (if available with jitter engine)
@@ -55,16 +53,13 @@ def jit_mips32_binary(args):
     )
     myjit.add_breakpoint(0x1337BEEF, code_sentinelle)
 
-
     # for stack
-    myjit.vm.add_memory_page(0xF000, PAGE_READ | PAGE_WRITE, b"\x00"*0x1000)
+    myjit.vm.add_memory_page(0xF000, PAGE_READ | PAGE_WRITE, b"\x00" * 0x1000)
 
     myjit.cpu.SP = 0xF800
 
     myjit.cpu.RA = 0x1337BEEF
     myjit.init_run(entryp)
-
-
 
     # Handle debugging
     if args.debugging is True:
@@ -75,6 +70,13 @@ def jit_mips32_binary(args):
     else:
         print(myjit.continue_run())
     return myjit
+
+
+def test(shellcode_mips32_sc_l, jitter_name):
+    bin_path, _ = shellcode_mips32_sc_l
+    jit_mips32_binary(parser.parse_args([bin_path, "0", "--jitter", jitter_name]))
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
     myjit = jit_mips32_binary(args)

@@ -16,7 +16,7 @@ def simp_ext(_, expr):
         new_expr = ExprCompose(
             arg,
             ExprCond(
-                arg.msb(),
+                arg.msb,
                 ExprInt(size2mask(add_size), add_size),
                 ExprInt(0, add_size)
             )
@@ -36,7 +36,7 @@ def simp_flags(_, expr):
         return ExprCond(op1 & op2, ExprInt(0, 1), ExprInt(1, 1))
 
     elif expr.is_op("FLAG_SIGN_SUB"):
-        return (args[0] - args[1]).msb()
+        return (args[0] - args[1]).msb
 
     elif expr.is_op("FLAG_EQ_CMP"):
         return ExprCond(
@@ -48,22 +48,22 @@ def simp_flags(_, expr):
     elif expr.is_op("FLAG_ADD_CF"):
         op1, op2 = args
         res = op1 + op2
-        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (~(op1 ^ op2)))).msb()
+        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (~(op1 ^ op2)))).msb
 
     elif expr.is_op("FLAG_SUB_CF"):
         op1, op2 = args
         res = op1 - op2
-        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb()
+        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb
 
     elif expr.is_op("FLAG_ADD_OF"):
         op1, op2 = args
         res = op1 + op2
-        return (((op1 ^ res) & (~(op1 ^ op2)))).msb()
+        return (((op1 ^ res) & (~(op1 ^ op2)))).msb
 
     elif expr.is_op("FLAG_SUB_OF"):
         op1, op2 = args
         res = op1 - op2
-        return (((op1 ^ res) & (op1 ^ op2))).msb()
+        return (((op1 ^ res) & (op1 ^ op2))).msb
 
     elif expr.is_op("FLAG_EQ_ADDWC"):
         op1, op2, op3 = args
@@ -76,30 +76,30 @@ def simp_flags(_, expr):
     elif expr.is_op("FLAG_ADDWC_OF"):
         op1, op2, op3 = args
         res = op1 + op2 + op3.zeroExtend(op1.size)
-        return (((op1 ^ res) & (~(op1 ^ op2)))).msb()
+        return (((op1 ^ res) & (~(op1 ^ op2)))).msb
 
     elif expr.is_op("FLAG_SUBWC_OF"):
         op1, op2, op3 = args
         res = op1 - (op2 + op3.zeroExtend(op1.size))
-        return (((op1 ^ res) & (op1 ^ op2))).msb()
+        return (((op1 ^ res) & (op1 ^ op2))).msb
 
     elif expr.is_op("FLAG_ADDWC_CF"):
         op1, op2, op3 = args
         res = op1 + op2 + op3.zeroExtend(op1.size)
-        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (~(op1 ^ op2)))).msb()
+        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (~(op1 ^ op2)))).msb
 
     elif expr.is_op("FLAG_SUBWC_CF"):
         op1, op2, op3 = args
         res = op1 - (op2 + op3.zeroExtend(op1.size))
-        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb()
+        return (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb
 
     elif expr.is_op("FLAG_SIGN_ADDWC"):
         op1, op2, op3 = args
-        return (op1 + op2 + op3.zeroExtend(op1.size)).msb()
+        return (op1 + op2 + op3.zeroExtend(op1.size)).msb
 
     elif expr.is_op("FLAG_SIGN_SUBWC"):
         op1, op2, op3 = args
-        return (op1 - (op2 + op3.zeroExtend(op1.size))).msb()
+        return (op1 - (op2 + op3.zeroExtend(op1.size))).msb
 
 
     elif expr.is_op("FLAG_EQ_SUBWC"):
@@ -156,4 +156,3 @@ def simp_flags(_, expr):
         return ~op_nf
 
     return expr
-

@@ -1,7 +1,6 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 
 class Test_FADD(Asm_Test_32):
@@ -20,5 +19,6 @@ class Test_FADD(Asm_Test_32):
         assert(self.myjit.cpu.EAX == 2)
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_FADD]]
+@pytest.mark.parametrize("case", [Test_FADD])
+def test(case, jitter_name):
+    case(jitter_name)

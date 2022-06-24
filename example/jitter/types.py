@@ -1,4 +1,3 @@
-#! /usr/bin/env python2
 """This script is just a short example of common usages for miasm.core.types.
 For a more complete view of what is possible, tests/core/types.py covers
 most of the module possibilities, and the module doc gives useful information
@@ -6,12 +5,12 @@ as well.
 """
 from __future__ import print_function
 
-from miasm.core.utils import iterbytes
 from miasm.analysis.machine import Machine
-from miasm.core.types import MemStruct, Self, Void, Str, Array, Ptr, \
-                              Num, Array, set_allocator
-from miasm.os_dep.common import heap
 from miasm.core.locationdb import LocationDB
+from miasm.core.types import MemStruct, Self, Void, Str, Ptr, \
+    Num, Array, set_allocator
+from miasm.core.utils import iterbytes
+from miasm.os_dep.common import heap
 
 loc_db = LocationDB()
 
@@ -21,6 +20,7 @@ my_heap = heap()
 # explicit address passing to the MemType subclasses (like MemStruct)
 # constructor
 set_allocator(my_heap.vm_alloc)
+
 
 # Let's reimplement a simple C generic linked list mapped on a VmMngr.
 
@@ -142,6 +142,7 @@ class DataArray(MemStruct):
         ("array", Array(Num("B"), 16)),
     ]
 
+
 class DataStr(MemStruct):
     fields = [
         ("valshort", Num("<H")),
@@ -150,114 +151,118 @@ class DataStr(MemStruct):
     ]
 
 
-print("This script demonstrates a LinkedList implementation using the types ")
-print("module in the first part, and how to play with some casts in the second.")
-print()
+def test():
+    print("This script demonstrates a LinkedList implementation using the types ")
+    print("module in the first part, and how to play with some casts in the second.")
+    print()
 
-# A random jitter
-# You can also use miasm.jitter.VmMngr.Vm(), but it does not happen in real
-# life scripts, so here is the usual way:
-jitter = Machine("x86_32").jitter(loc_db, "python")
-vm = jitter.vm
+    # A random jitter
+    # You can also use miasm.jitter.VmMngr.Vm(), but it does not happen in real
+    # life scripts, so here is the usual way:
+    jitter = Machine("x86_32").jitter(loc_db, "python")
+    vm = jitter.vm
 
-# Auto-allocated by my_heap. If you allocate memory at `addr`,
-# `link = LinkedList(vm, addr)` will use this allocation. If you just want
-# to read/modify existing struct, you may want to use the (vm, addr) syntax.
-link = LinkedList(vm)
-# memset the struct (with '\x00' by default)
-link.memset()
+    # Auto-allocated by my_heap. If you allocate memory at `addr`,
+    # `link = LinkedList(vm, addr)` will use this allocation. If you just want
+    # to read/modify existing struct, you may want to use the (vm, addr) syntax.
+    link = LinkedList(vm)
+    # memset the struct (with '\x00' by default)
+    link.memset()
 
-# Push three uninitialized structures
-link.push(DataArray(vm))
-link.push(DataArray(vm))
-link.push(DataArray(vm))
+    # Push three uninitialized structures
+    link.push(DataArray(vm))
+    link.push(DataArray(vm))
+    link.push(DataArray(vm))
 
-# Size has been updated
-assert link.size == 3
-# If you get it directly from the VM, it is updated as well
-raw_size = vm.get_mem(link.get_addr("size"), link.get_type()
-                                                 .get_field_type("size").size)
-assert raw_size == b'\x03\x00\x00\x00'
+    # Size has been updated
+    assert link.size == 3
+    # If you get it directly from the VM, it is updated as well
+    raw_size = vm.get_mem(link.get_addr("size"), link.get_type()
+                          .get_field_type("size").size)
+    assert raw_size == b'\x03\x00\x00\x00'
 
-print("The linked list just built:")
-print(repr(link), '\n')
+    print("The linked list just built:")
+    print(repr(link), '\n')
 
-print("Its uninitialized data elements:")
-for data in link:
-    # __iter__ returns MemVoids here, just cast them to the real data type
-    real_data = data.cast(DataArray)
-    print(repr(real_data))
-print()
+    print("Its uninitialized data elements:")
+    for data in link:
+        # __iter__ returns MemVoids here, just cast them to the real data type
+        real_data = data.cast(DataArray)
+        print(repr(real_data))
+    print()
 
-# Now let's play with one data
-data = link.pop(DataArray)
-assert link.size == 2
-# Make the Array Ptr point to the data's array field
-# Note: this is equivalent to data.arrayptr.val = ...
-data.arrayptr = data.get_addr("array")
-# Now the pointer dereference is equal to the array field's value
-assert data.arrayptr.deref == data.array
+    # Now let's play with one data
+    data = link.pop(DataArray)
+    assert link.size == 2
+    # Make the Array Ptr point to the data's array field
+    # Note: this is equivalent to data.arrayptr.val = ...
+    data.arrayptr = data.get_addr("array")
+    # Now the pointer dereference is equal to the array field's value
+    assert data.arrayptr.deref == data.array
 
-# Let's say that it is a DataStr:
-datastr = data.cast(DataStr)
+    # Let's say that it is a DataStr:
+    datastr = data.cast(DataStr)
 
-print("First element casted to DataStr:")
-print(repr(datastr))
-print()
+    print("First element casted to DataStr:")
+    print(repr(datastr))
+    print()
 
-# data and datastr really share the same memory:
-data.val1 = 0x34
-data.val2 = 0x12
-assert datastr.valshort == 0x1234
-datastr.valshort = 0x1122
-assert data.val1 == 0x22 and data.val2 == 0x11
+    # data and datastr really share the same memory:
+    data.val1 = 0x34
+    data.val2 = 0x12
+    assert datastr.valshort == 0x1234
+    datastr.valshort = 0x1122
+    assert data.val1 == 0x22 and data.val2 == 0x11
 
-# Let's play with strings
-memstr = datastr.data.deref
-# Note that memstr is Str("utf16")
-memstr.val = 'Miams'
+    # Let's play with strings
+    memstr = datastr.data.deref
+    # Note that memstr is Str("utf16")
+    memstr.val = 'Miams'
 
-print("Cast data.array to MemStr and set the string value:")
-print(repr(memstr))
-print()
+    print("Cast data.array to MemStr and set the string value:")
+    print(repr(memstr))
+    print()
 
-# If you followed, memstr and data.array point to the same object, so:
-raw_miams = 'Miams'.encode('utf-16le') + b'\x00'*2
-raw_miams_array = [ord(c) for c in iterbytes(raw_miams)]
-assert list(data.array)[:len(raw_miams_array)] == raw_miams_array
-assert data.array.cast(Str("utf16")) == memstr
-# Default is "ansi"
-assert data.array.cast(Str()) != memstr
-assert data.array.cast(Str("utf16")).val == memstr.val
+    # If you followed, memstr and data.array point to the same object, so:
+    raw_miams = 'Miams'.encode('utf-16le') + b'\x00' * 2
+    raw_miams_array = [ord(c) for c in iterbytes(raw_miams)]
+    assert list(data.array)[:len(raw_miams_array)] == raw_miams_array
+    assert data.array.cast(Str("utf16")) == memstr
+    # Default is "ansi"
+    assert data.array.cast(Str()) != memstr
+    assert data.array.cast(Str("utf16")).val == memstr.val
 
-print("See that the original array has been modified:")
-print(repr(data))
-print()
+    print("See that the original array has been modified:")
+    print(repr(data))
+    print()
 
-# Some type manipulation examples, for example let's construct an argv for
-# a program:
-# Let's say that we have two arguments, +1 for the program name and +1 for the
-# final null ptr in argv, the array has 4 elements:
-argv_t = Array(Ptr("<I", Str()), 4)
-print("3 arguments argv type:", argv_t)
+    # Some type manipulation examples, for example let's construct an argv for
+    # a program:
+    # Let's say that we have two arguments, +1 for the program name and +1 for the
+    # final null ptr in argv, the array has 4 elements:
+    argv_t = Array(Ptr("<I", Str()), 4)
+    print("3 arguments argv type:", argv_t)
 
-# alloc argv somewhere
-argv = argv_t.lval(vm)
+    # alloc argv somewhere
+    argv = argv_t.lval(vm)
 
-# Auto alloc with the MemStr.from_str helper
-MemStrAnsi = Str().lval
-argv[0].val = MemStrAnsi.from_str(vm, "./my-program").get_addr()
-argv[1].val = MemStrAnsi.from_str(vm, "arg1").get_addr()
-argv[2].val = MemStrAnsi.from_str(vm, "27").get_addr()
-argv[3].val = 0
+    # Auto alloc with the MemStr.from_str helper
+    MemStrAnsi = Str().lval
+    argv[0].val = MemStrAnsi.from_str(vm, "./my-program").get_addr()
+    argv[1].val = MemStrAnsi.from_str(vm, "arg1").get_addr()
+    argv[2].val = MemStrAnsi.from_str(vm, "27").get_addr()
+    argv[3].val = 0
 
-# If you changed your mind on the second arg, you could do:
-argv[2].deref.val = "42"
+    # If you changed your mind on the second arg, you could do:
+    argv[2].deref.val = "42"
 
-print("An argv instance:", repr(argv))
-print("argv values:", repr([val.deref.val for val in argv[:-1]]))
-print()
+    print("An argv instance:", repr(argv))
+    print("argv values:", repr([val.deref.val for val in argv[:-1]]))
+    print()
 
-print("See test/core/types.py and the miasm.core.types module doc for ")
-print("more information.")
+    print("See test/core/types.py and the miasm.core.types module doc for ")
+    print("more information.")
 
+
+if __name__ == '__main__':
+    test()

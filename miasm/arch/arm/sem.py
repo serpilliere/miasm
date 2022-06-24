@@ -1723,7 +1723,7 @@ def add_condition_expr(ir, instr, cond, instr_ir, extra_ir):
             break
     if not has_irdst:
         instr_ir.append(ExprAssign(ir.IRDst, loc_next_expr))
-    e_do = IRBlock(ir.loc_db, loc_do, [AssignBlock(instr_ir, instr)])
+    e_do = IRBlock(ir.loc_db, loc_do, [AssignBlock(instr_ir, instr.to_ir())])
     e = [ExprAssign(ir.IRDst, dst_cond)]
     return e, [e_do] + extra_ir
 
@@ -2171,4 +2171,3 @@ class Lifter_Armtb(Lifter_Armtl):
         self.sp = SP
         self.IRDst = ExprId('IRDst', 32)
         self.addrsize = 32
-

@@ -2,6 +2,8 @@ from __future__ import print_function
 import time
 from pdb import pm
 
+import pytest
+
 from miasm.core.utils import decode_hex, encode_hex
 from miasm.core.locationdb import LocationDB
 from miasm.arch.mips32.arch import *
@@ -132,7 +134,6 @@ reg_tests_mips32 = [
     ("00433974    CVT.S.D    F0, F0",
      "46200020"),
 
-
     ("0044A120    MULT       V1, V0",
      "00620018"),
     ("00404194    MULTU      A1, V1",
@@ -161,7 +162,6 @@ reg_tests_mips32 = [
      "40822800"),
     ("8BA0FD94    MTC0       V1, ENTRYHI",
      "40835000"),
-
 
     ("8BA0FDA8    MFC0       V0, INDEX",
      "40020000"),
@@ -255,23 +255,23 @@ reg_tests_mips32 = [
 ]
 
 
-ts = time.time()
 def h2i(s):
     return decode_hex(s.replace(' ', ''))
 
-for s, l in reg_tests_mips32:
-    print("-" * 80)
+
+@pytest.mark.parametrize("s,l", reg_tests_mips32)
+def test(s, l):
     s = s[12:]
     b = h2i((l))
     mn = mn_mips32.dis(b, 'b')
     print([str(x) for x in mn.args])
     print(s)
     print(mn)
-    assert(str(mn) == s)
+    assert (str(mn) == s)
     l = mn_mips32.fromstring(s, loc_db, 'b')
-    assert(str(l) == s)
+    assert (str(l) == s)
     a = mn_mips32.asm(l, 'b')
     print([x for x in a])
     print(repr(b))
-    assert(b in a)
+    assert (b in a)
     print(l.to_html())

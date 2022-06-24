@@ -52,7 +52,7 @@ class StructLookup(ExprReducer):
         """
         if not node.expr.is_op():
             return None
-        if set(arg.info for arg in node.args) == set([self.CST]):
+        if set(arg.info for arg in node.args) == {self.CST}:
             return self.CST
         return None
 
@@ -69,25 +69,26 @@ class StructLookup(ExprReducer):
                        reduce_ptr_plus_int,
                        reduce_cst_op,
                        reduce_at_struct_ptr
-                      ]
+                       ]
 
 
-def test():
-    struct_lookup = StructLookup()
+struct_lookup = StructLookup()
 
-    ptr = ExprId('ECX', 32)
-    int4 = ExprInt(4, 32)
-    tests = [
-        (ptr, StructLookup.FIELD_A_PTR),
-        (ptr + int4, StructLookup.FIELD_A_PTR),
-        (ptr + int4 * int4, StructLookup.FIELD_A_PTR),
-        (ExprMem(ptr, 32), StructLookup.FIELD_A),
-        (ExprMem(ptr + int4 * int4, 32), StructLookup.FIELD_A),
-    ]
+ptr = ExprId('ECX', 32)
+int4 = ExprInt(4, 32)
+tests = [
+    (ptr, StructLookup.FIELD_A_PTR),
+    (ptr + int4, StructLookup.FIELD_A_PTR),
+    (ptr + int4 * int4, StructLookup.FIELD_A_PTR),
+    (ExprMem(ptr, 32), StructLookup.FIELD_A),
+    (ExprMem(ptr + int4 * int4, 32), StructLookup.FIELD_A),
+]
 
-    for expr_in, result in tests:
-        assert struct_lookup.reduce(expr_in).info == result
+
+def check(expr_in, result):
+    assert struct_lookup.reduce(expr_in).info == result
 
 
 if __name__ == "__main__":
-    test()
+    for expr_in, result in tests:
+        check(expr_in, result)

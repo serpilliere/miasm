@@ -1,14 +1,17 @@
 from __future__ import print_function
+
+import pytest
+
 from miasm.expression.expression import *
 from miasm.analysis.expression_range import expr_range
 from miasm.ir.translators import Translator
-import z3
 
-trans = Translator.to_language("z3")
-a = ExprId("a", 8)
-b = ExprId("b", 32)
 
-for expr in [
+def generate_cases():
+    a = ExprId("a", 8)
+    b = ExprId("b", 32)
+
+    return [
         a,
         b,
         b[4:6],
@@ -24,7 +27,7 @@ for expr in [
         - a,
         - ExprInt(4, 8),
         b[:8].zeroExtend(16) - ExprInt(4, 16),
-        a[4:6].zeroExtend(32) + ExprInt(-1, 32),
+        a[4:6].zeroExtend(32) + (-ExprInt(1, 32)),
         a >> ExprInt(4, 8),
         a << ExprInt(4, 8),
         ExprOp("a>>", a, ExprInt(4, 8)),
@@ -76,11 +79,23 @@ for expr in [
 
         # Fuzzed by ExprRandom, with previous bug
         ExprSlice(ExprSlice(ExprOp('<<<', ExprInt(0x7FBE84D6, 51), ExprId('WYBZj', 51)), 6, 48), 3, 35),
-        ExprOp('>>>', ExprOp('-', ExprOp('&', ExprInt(0x347384F7, 32), ExprId('oIkka', 32), ExprId('jSfOB', 32), ExprId('dUXBp', 32), ExprInt(0x7169DEAA, 32))), ExprId('kMVuR', 32)),
-        ExprOp('|', ExprInt(0x94A3AB47, 32), ExprCompose(ExprId('dTSkf', 21), ExprOp('>>', ExprInt(0x24, 8), ExprId('HTHES', 8)), ExprId('WHNIZ', 1), ExprMem(ExprInt(0x100, 9), 1), ExprId('kPQck', 1))),
-        ExprOp('<<<', ExprOp('<<<', ExprCompose(ExprId('OOfuB', 6), ExprInt(0x24, 11), ExprInt(0xE8C, 12), ExprId('jbUWR', 1), ExprInt(0x2, 2)), ExprId('mLlTH', 32)), ExprInt(0xE600B6B2, 32)),
+        ExprOp('>>>', ExprOp('-', ExprOp('&', ExprInt(0x347384F7, 32), ExprId('oIkka', 32), ExprId('jSfOB', 32),
+                                         ExprId('dUXBp', 32), ExprInt(0x7169DEAA, 32))), ExprId('kMVuR', 32)),
+        ExprOp('|', ExprInt(0x94A3AB47, 32),
+               ExprCompose(ExprId('dTSkf', 21), ExprOp('>>', ExprInt(0x24, 8), ExprId('HTHES', 8)),
+                           ExprId('WHNIZ', 1), ExprMem(ExprInt(0x100, 9), 1), ExprId('kPQck', 1))),
+        ExprOp('<<<', ExprOp('<<<', ExprCompose(ExprId('OOfuB', 6), ExprInt(0x24, 11), ExprInt(0xE8C, 12),
+                                                ExprId('jbUWR', 1), ExprInt(0x2, 2)), ExprId('mLlTH', 32)),
+               ExprInt(0xE600B6B2, 32)),
 
-]:
+    ]
+
+
+@pytest.mark.parametrize("expr", generate_cases())
+def test(expr):
+    import z3
+    trans = Translator.to_language("z3")
+
     computed_range = expr_range(expr)
     print(expr, computed_range)
 
@@ -91,12 +106,17 @@ for expr in [
     s = z3.Solver()
     cond = []
 
-    ## Constraint expr to be in computed intervals
+    # Constraint expr to be in computed intervals
     z3_expr = trans.from_expr(expr)
     for mini, maxi in computed_range:
         cond.append(z3.And(z3.ULE(mini, z3_expr),
                            z3.ULE(z3_expr, maxi)))
 
-    ## Ask for a solution outside intervals (should not exists)
+    # Ask for a solution outside intervals (should not exist)
     s.add(z3.Not(z3.Or(*cond)))
     assert s.check() == z3.unsat
+
+
+if __name__ == '__main__':
+    for expr in generate_cases():
+        test(expr)

@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 class Test_PMOVMSKB(Asm_Test_32):
     TXT = '''
@@ -24,5 +22,7 @@ class Test_PMOVMSKB(Asm_Test_32):
         assert self.myjit.cpu.MM1 == 0x112233C455E67788
         assert self.myjit.cpu.EAX == 0x00000015
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PMOVMSKB,]]
+
+@pytest.mark.parametrize("case", [Test_PMOVMSKB])
+def test(case, jitter_name):
+    case(jitter_name)

@@ -1,0 +1,4 @@
+pytest
+pytest-xdist
+pytest-lazy-fixture
+pytest-cov

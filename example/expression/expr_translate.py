@@ -1,58 +1,79 @@
 from __future__ import print_function
-import random
 
-from future.utils import viewitems
+import random
 
 from miasm.expression.expression import *
 from miasm.expression.expression_helper import ExprRandom
 from miasm.ir.translators import Translator
 
-random.seed(0)
 
 class ExprRandom_OpSubRange(ExprRandom):
     operations_by_args_number = {1: ["-"],
-                                 2: ["<<", ">>",],
+                                 2: ["<<", ">>", ],
                                  "2+": ["+", "*", "&", "|", "^"],
                                  }
 
 
+random.seed(0)
+
 print("[+] Compute a random expression:")
 expr = ExprRandom_OpSubRange.get(depth=8)
 print("-> %s" % expr)
-print()
 
-target_exprs = {lang:Translator.to_language(lang).from_expr(expr)
-                for lang in Translator.available_languages()}
-for target_lang, target_expr in viewitems(target_exprs):
+
+def test_translate(translator):
+    target_lang = translator.__LANG__
+    target_expr = translator.from_expr(expr)
+
     print("[+] Translate in %s:" % target_lang)
     print(target_expr)
-    print()
 
-print("[+] Eval in Python:")
+
 def memory(addr, size):
     ret = random.randint(0, (1 << size) - 1)
     print("Memory access: @0x%x -> 0x%x" % (addr, ret))
     return ret
 
-for expr_id in expr.get_r(mem_read=True):
-    if isinstance(expr_id, ExprId):
-        value = random.randint(0, (1 << expr_id.size) - 1)
-        print("Declare var: %s = 0x%x" % (expr_id.name, value))
-        globals()[expr_id.name] = value
 
-print("-> 0x%x" % eval(target_exprs["Python"]))
+def test_python():
+    python = Translator.to_language("python")
+    print("Expression:", expr)
+    target_expr = python.from_expr(expr)
+    print("Target:    ", target_expr)
 
-print("[+] Validate the Miasm syntax rebuilding")
-exprRebuild = eval(target_exprs["Miasm"])
-assert(expr == exprRebuild)
+    for expr_id in expr.get_r(mem_read=True):
+        if isinstance(expr_id, ExprId):
+            value = random.randint(0, (1 << expr_id.size) - 1)
+            print("Declare var: %s = 0x%x" % (expr_id.name, value))
+            globals()[expr_id.name] = value
+
+    print("-> 0x%x" % eval(target_expr))
 
 
-a = ExprId("a", 32)
-b = ExprId("b", 32)
-cst1 = ExprInt(1, 32)
-eq_test = ExprOp("==", a, b + cst1)
+def test_miasm():
+    m = Translator.to_language("miasm")
+    target_expr = m.from_expr(expr)
 
-for lang in Translator.available_languages():
-    translator = Translator.to_language(lang)
-    print("Translate to %s:" % lang)
+    print("[+] Validate the Miasm syntax rebuilding")
+    exprRebuild = eval(target_expr)
+    assert (expr == exprRebuild)
+
+
+def test_equality(translator):
+    a = ExprId("a", 32)
+    b = ExprId("b", 32)
+    cst1 = ExprInt(1, 32)
+    eq_test = ExprOp("==", a, b + cst1)
+
+    print("Translate to %s:" % translator.__LANG__)
     print(translator.from_expr(eq_test))
+
+
+if __name__ == '__main__':
+    for translator_builder in Translator.available_translators:
+        translator = translator_builder()
+        test_translate(translator)
+        test_equality(translator)
+
+    test_python()
+    test_miasm()

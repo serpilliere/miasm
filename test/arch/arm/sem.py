@@ -1,11 +1,6 @@
-#! /usr/bin/env python2
-#-*- coding:utf-8 -*-
-
 from __future__ import print_function
 import unittest
 import logging
-
-from future.utils import viewitems
 
 from miasm.ir.symbexec import SymbolicExecutionEngine
 from miasm.arch.arm.arch import mn_arm as mn
@@ -14,18 +9,19 @@ from miasm.arch.arm.regs import *
 from miasm.expression.expression import *
 from miasm.core.locationdb import LocationDB
 from miasm.core.bin_stream import bin_stream_str
-from pdb import pm
 
 logging.getLogger('cpuhelper').setLevel(logging.ERROR)
 loc_db = LocationDB()
-EXCLUDE_REGS = set([Lifter(loc_db).IRDst])
+EXCLUDE_REGS = {Lifter(loc_db).IRDst}
 
 
 def M(addr):
     return ExprMem(ExprInt(addr, 16), 16)
 
 
-def compute(asm, inputstate={}, debug=False):
+def compute(asm, inputstate=None, debug=False):
+    if inputstate is None:
+        inputstate = {}
     loc_db = LocationDB()
     sympool = dict(regs_init)
     sympool.update({k: ExprInt(v, k.size) for k, v in viewitems(inputstate)})
@@ -53,6 +49,7 @@ def compute(asm, inputstate={}, debug=False):
         else:
             out[k] = v
     return out
+
 
 class TestARMSemantic(unittest.TestCase):
 
@@ -268,10 +265,6 @@ class TestARMSemantic(unittest.TestCase):
         self.assertEqual(compute('ADDS               R3,    R2,   R3 ', {R2: 0xFFFFFFFF, R3:0xFFFFFFFF}),
                          { nf: 1, zf: 0, cf: 1, of: 0, R2: 0xFFFFFFFF, R3:0xFFFFFFFE})
 
-
-
-
-
     def test_ADR(self):
         # §A8.8.12:                ADR{<c>}{<q>} <Rd>, <label>    <==>    ADD{<c>}{<q>} <Rd>, PC, #<const>
         pass
@@ -348,8 +341,6 @@ class TestARMSemantic(unittest.TestCase):
                          { nf: 1, zf: 0, cf: 0, of: 0, R2: 0x80000000, R3: 0xFFFFFFFF})
         self.assertEqual(compute('SUBS               R3,    R2,   R3 ', {R2: 0x80000001, R3: 0x80000000}),
                          { nf: 0, zf: 0, cf: 1, of: 0, R2: 0x80000001, R3: 0x1})
-
-
 
     def test_ADDS(self):
         self.assertEqual(compute('ADDS   R2, R2, R3', {R2: 0x2, R3: 0x1}), {R2: 0x3, R3: 0x1, of: 0x0, zf: 0x0, cf: 0x0, nf: 0x0})
@@ -495,8 +486,3 @@ class TestARMSemantic(unittest.TestCase):
         self.assertEqual(compute('SMLAL R0, R1, R2, R3', {R0: 0x0, R1: 0x0, R2: 0x1, R3: 0x80808080}), {R0: 0x80808080, R1: 0xffffffff, R2: 0x1, R3: 0x80808080})
         self.assertEqual(compute('SMLAL R2, R3, R4, R5', {R2: 0xffffffff, R3: 0x0, R4: 0x12345678, R5: 0x87654321}), {R2: 0x70b88d77, R3: 0xf76c768e, R4: 0x12345678, R5: 0x87654321})
         self.assertEqual(compute('SMLAL R2, R3, R4, R5', {R2: 0xffffffff, R3: 0x00000002, R4: 0x12345678, R5: 0x87654321}), {R2: 0x70b88d77, R3: 0xf76c7690, R4: 0x12345678, R5: 0x87654321})
-
-if __name__ == '__main__':
-    testsuite = unittest.TestLoader().loadTestsFromTestCase(TestARMSemantic)
-    report = unittest.TextTestRunner(verbosity=2).run(testsuite)
-    exit(len(report.errors + report.failures))

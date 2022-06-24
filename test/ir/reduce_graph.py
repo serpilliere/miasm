@@ -1,12 +1,11 @@
 """Regression test module for DependencyGraph"""
 from __future__ import print_function
-from builtins import object
-from pdb import pm
+
+from pathlib import Path
 
 from future.utils import viewitems
 
-from miasm.expression.expression import ExprId, ExprInt, ExprAssign, ExprCond, \
-    ExprLoc, LocKey
+from miasm.expression.expression import ExprId, ExprInt, ExprAssign, ExprCond, ExprLoc
 
 from miasm.core.locationdb import LocationDB
 from miasm.ir.analysis import LifterModelCall
@@ -14,7 +13,6 @@ from miasm.ir.ir import IRBlock, AssignBlock, IRCFG
 from miasm.analysis.data_flow import merge_blocks
 
 loc_db = LocationDB()
-
 
 A = ExprId("a", 32)
 B = ExprId("b", 32)
@@ -52,14 +50,12 @@ LBL6 = loc_db.add_location("lbl6", 6)
 
 
 class Regs(object):
-
     """Fake registers for tests """
     regs_init = {A: A_INIT, B: B_INIT, C: C_INIT, D: D_INIT}
     all_regs_ids = [A, B, C, D, SP, PC, R]
 
 
 class Arch(object):
-
     """Fake architecture for tests """
     regs = Regs()
 
@@ -71,7 +67,6 @@ class Arch(object):
 
 
 class IRATest(LifterModelCall):
-
     """Fake IRA class for tests"""
 
     def __init__(self, loc_db):
@@ -81,7 +76,7 @@ class IRATest(LifterModelCall):
         self.ret_reg = R
 
     def get_out_regs(self, _):
-        return set([self.ret_reg, self.sp])
+        return {self.ret_reg, self.sp}
 
 
 def gen_irblock(label, exprs_list):
@@ -99,580 +94,530 @@ def gen_irblock(label, exprs_list):
     return irbl
 
 
-
-
-############# Tests #############
 IRA = IRATest(loc_db)
 
 
-########## G1 ##########
-# Input
-G1 = IRA.new_ircfg()
+def test1(out_path):
+    # Input
+    G1 = IRA.new_ircfg()
 
-G1_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G1_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(B, C),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(B, C),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G1_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G1_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G1_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G1_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(A, B),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(A, B),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
 
-for irb in [G1_IRB0, G1_IRB1, G1_IRB2]:
-    G1.add_irblock(irb)
+    for irb in [G1_IRB0, G1_IRB1, G1_IRB2]:
+        G1.add_irblock(irb)
 
-# Result
-G1_RES = IRA.new_ircfg()
+    # Result
+    G1_RES = IRA.new_ircfg()
 
-G1_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G1_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(B, C),
-        ],
-        [
-            ExprAssign(A, B),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(B, C),
+            ],
+            [
+                ExprAssign(A, B),
+                ExprAssign(IRDst, C),
+            ]
+
         ]
+    )
 
-    ]
-)
+    for irb in [G1_RES_IRB0]:
+        G1_RES.add_irblock(irb)
 
-
-
-for irb in [G1_RES_IRB0]:
-    G1_RES.add_irblock(irb)
+    check(1, G1, G1_RES, out_path)
 
 
+def test2(out_path):
+    # Input
 
-def cmp_ir_graph(g1, g2):
-    assert list(viewitems(g1.blocks)) == list(viewitems(g2.blocks))
-    assert set(g1.edges()) == set(g2.edges())
+    G2 = IRA.new_ircfg()
 
-
-
-########## G2 ##########
-# Input
-
-G2 = IRA.new_ircfg()
-
-G2_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G2_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G2_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G2_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
 
-for irb in [G2_IRB0, G2_IRB1]:
-    G2.add_irblock(irb)
+    for irb in [G2_IRB0, G2_IRB1]:
+        G2.add_irblock(irb)
 
+    # Result
+    G2_RES = IRA.new_ircfg()
 
-# Result
-G2_RES = IRA.new_ircfg()
-
-G2_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G2_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G2_RES_IRB0]:
+        G2_RES.add_irblock(irb)
+
+    check(2, G2, G2_RES, out_path)
 
 
-for irb in [G2_RES_IRB0]:
-    G2_RES.add_irblock(irb)
+def test3(out_path):
+    # Input
 
+    G3 = IRA.new_ircfg()
 
-########## G3 ##########
-# Input
-
-G3 = IRA.new_ircfg()
-
-G3_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G3_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G3_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G3_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G3_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G3_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G3_IRB0, G3_IRB1, G3_IRB2]:
+        G3.add_irblock(irb)
 
-for irb in [G3_IRB0, G3_IRB1, G3_IRB2]:
-    G3.add_irblock(irb)
+    # Result
+    G3_RES = IRA.new_ircfg()
 
-
-# Result
-G3_RES = IRA.new_ircfg()
-
-G3_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G3_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(A, C),
-        ],
-        [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(A, C),
+            ],
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G3_RES_IRB0]:
+        G3_RES.add_irblock(irb)
+
+    check(3, G3, G3_RES, out_path)
 
 
-for irb in [G3_RES_IRB0]:
-    G3_RES.add_irblock(irb)
+def test4(out_path):
+    # Input
 
+    G4 = IRA.new_ircfg()
 
-
-
-########## G4 ##########
-# Input
-
-G4 = IRA.new_ircfg()
-
-G4_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G4_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G4_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G4_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G4_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G4_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G4_IRB0, G4_IRB1, G4_IRB2]:
+        G4.add_irblock(irb)
 
-for irb in [G4_IRB0, G4_IRB1, G4_IRB2]:
-    G4.add_irblock(irb)
+    # Result
+    G4_RES = IRA.new_ircfg()
 
-
-# Result
-G4_RES = IRA.new_ircfg()
-
-G4_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G4_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-
-G4_RES_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G4_RES_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-        ],
-        [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(A, C),
+            ],
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G4_RES_IRB0, G4_RES_IRB1]:
+        G4_RES.add_irblock(irb)
+
+    check(4, G4, G4_RES, out_path)
 
 
-for irb in [G4_RES_IRB0, G4_RES_IRB1 ]:
-    G4_RES.add_irblock(irb)
+def test5(out_path):
+    # Input
 
+    G5 = IRA.new_ircfg()
 
-
-########## G5 ##########
-# Input
-
-G5 = IRA.new_ircfg()
-
-G5_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G5_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G5_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G5_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL2, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G5_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G5_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL3, 32))),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL3, 32))),
+            ]
         ]
-    ]
-)
+    )
 
-
-G5_IRB3 = gen_irblock(
-    LBL3,
-    [
+    G5_IRB3 = gen_irblock(
+        LBL3,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G5_IRB0, G5_IRB1, G5_IRB2, G5_IRB3]:
+        G5.add_irblock(irb)
 
-for irb in [G5_IRB0, G5_IRB1, G5_IRB2, G5_IRB3]:
-    G5.add_irblock(irb)
+    # Result
+    G5_RES = IRA.new_ircfg()
 
-
-# Result
-G5_RES = IRA.new_ircfg()
-
-
-G5_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G5_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G5_RES_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G5_RES_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-        ],
-        [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL3, 32))),
+            [
+                ExprAssign(A, C),
+            ],
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL3, 32))),
+            ]
         ]
-    ]
-)
+    )
 
-
-G5_RES_IRB3 = gen_irblock(
-    LBL3,
-    [
+    G5_RES_IRB3 = gen_irblock(
+        LBL3,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, C),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, C),
+            ]
         ]
-    ]
-)
+    )
 
-for irb in [G5_RES_IRB0, G5_RES_IRB1, G5_RES_IRB3 ]:
-    G5_RES.add_irblock(irb)
+    for irb in [G5_RES_IRB0, G5_RES_IRB1, G5_RES_IRB3]:
+        G5_RES.add_irblock(irb)
+
+    check(5, G5, G5_RES, out_path)
 
 
+def test6(out_path):
+    # Input
 
-########## G6 ##########
-# Input
+    G6 = IRA.new_ircfg()
 
-G6 = IRA.new_ircfg()
-
-G6_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G6_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL2, 32))),
+            [
+                ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL1, 32), ExprLoc(LBL2, 32))),
+            ]
         ]
-    ]
-)
+    )
 
-G6_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G6_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G6_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G6_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, D),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, D),
+            ]
         ]
-    ]
-)
+    )
 
-
-G6_IRB3 = gen_irblock(
-    LBL3,
-    [
+    G6_IRB3 = gen_irblock(
+        LBL3,
         [
-            ExprAssign(A, D),
-            ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            [
+                ExprAssign(A, D),
+                ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G6_IRB0, G6_IRB1, G6_IRB2, G6_IRB3]:
+        G6.add_irblock(irb)
 
-for irb in [G6_IRB0, G6_IRB1, G6_IRB2, G6_IRB3]:
-    G6.add_irblock(irb)
+    # Result
+    G6_RES = IRA.new_ircfg()
 
-
-# Result
-G6_RES = IRA.new_ircfg()
-
-G6_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G6_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL3, 32), ExprLoc(LBL2, 32))),
+            [
+                ExprAssign(IRDst, ExprCond(C, ExprLoc(LBL3, 32), ExprLoc(LBL2, 32))),
+            ]
         ]
-    ]
-)
+    )
 
-
-G6_RES_IRB2 = gen_irblock(
-    LBL2,
-    [
+    G6_RES_IRB2 = gen_irblock(
+        LBL2,
         [
-            ExprAssign(D, A),
-            ExprAssign(IRDst, D),
+            [
+                ExprAssign(D, A),
+                ExprAssign(IRDst, D),
+            ]
         ]
-    ]
-)
+    )
 
-
-G6_RES_IRB3 = gen_irblock(
-    LBL3,
-    [
+    G6_RES_IRB3 = gen_irblock(
+        LBL3,
         [
-            ExprAssign(A, D),
-            ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            [
+                ExprAssign(A, D),
+                ExprAssign(IRDst, ExprLoc(LBL3, 32)),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G6_RES_IRB0, G6_RES_IRB2, G6_RES_IRB3]:
+        G6_RES.add_irblock(irb)
+
+    check(6, G6, G6_RES, out_path)
 
 
-for irb in [G6_RES_IRB0, G6_RES_IRB2, G6_RES_IRB3  ]:
-    G6_RES.add_irblock(irb)
+def test7(out_path):
+    # Input
 
+    G7 = IRA.new_ircfg()
 
-
-
-########## G7 ##########
-# Input
-
-G7 = IRA.new_ircfg()
-
-G7_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G7_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G7_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G7_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G7_IRB0, G7_IRB1]:
+        G7.add_irblock(irb)
 
-for irb in [G7_IRB0, G7_IRB1]:
-    G7.add_irblock(irb)
+    # Result
+    G7_RES = IRA.new_ircfg()
 
-
-# Result
-G7_RES = IRA.new_ircfg()
-
-
-
-G7_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G7_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G7_RES_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G7_RES_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G7_RES_IRB0, G7_RES_IRB1]:
+        G7_RES.add_irblock(irb)
+
+    check(7, G7, G7_RES, out_path)
 
 
-for irb in [G7_RES_IRB0, G7_RES_IRB1]:
-    G7_RES.add_irblock(irb)
+def test8(out_path):
+    # Input
 
+    G8 = IRA.new_ircfg()
 
-
-########## G8 ##########
-# Input
-
-G8 = IRA.new_ircfg()
-
-G8_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G8_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G8_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G8_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
+    for irb in [G8_IRB0, G8_IRB1]:
+        G8.add_irblock(irb)
 
-for irb in [G8_IRB0, G8_IRB1]:
-    G8.add_irblock(irb)
+    # Result
+    G8_RES = IRA.new_ircfg()
 
-
-# Result
-G8_RES = IRA.new_ircfg()
-
-
-
-G8_RES_IRB0 = gen_irblock(
-    LBL0,
-    [
+    G8_RES_IRB0 = gen_irblock(
+        LBL0,
         [
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
 
-G8_RES_IRB1 = gen_irblock(
-    LBL1,
-    [
+    G8_RES_IRB1 = gen_irblock(
+        LBL1,
         [
-            ExprAssign(A, C),
-            ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            [
+                ExprAssign(A, C),
+                ExprAssign(IRDst, ExprLoc(LBL1, 32)),
+            ]
         ]
-    ]
-)
+    )
+
+    for irb in [G8_RES_IRB0, G8_RES_IRB1]:
+        G8_RES.add_irblock(irb)
+
+    check(8, G8, G8_RES, out_path)
 
 
-for irb in [G8_RES_IRB0, G8_RES_IRB1]:
-    G8_RES.add_irblock(irb)
-
-
-
-
-
-################# Tests
-
-
-for i, (g_test, g_ref) in enumerate(
-        [
-            (G1, G1_RES),
-            (G2, G2_RES),
-            (G3, G3_RES),
-            (G4, G4_RES),
-            (G5, G5_RES),
-            (G6, G6_RES),
-            (G7, G7_RES),
-            (G8, G8_RES),
-        ], 1):
-
+def check(i, g_test, g_ref, out_path: Path):
     heads = g_test.heads()
-    print('*'*10, 'Test', i, "*"*10)
-    open('test_in_%d.dot' % i, 'w').write(g_test.dot())
-    open('test_ref_%d.dot' % i, 'w').write(g_ref.dot())
+    out_path.joinpath("test_in_%d.dot" % i).write_text(g_test.dot())
+    out_path.joinpath("test_ref_%d.dot" % i).write_text(g_ref.dot())
     merge_blocks(g_test, heads)
-    open('test_out_%d.dot' % i, 'w').write(g_test.dot())
+    out_path.joinpath("test_out_%d.dot" % i).write_text(g_test.dot())
 
-    cmp_ir_graph(g_test, g_ref)
+    assert g_test == g_ref
+    assert set(g_test.edges()) == set(g_ref.edges())
     print('\t', 'OK')

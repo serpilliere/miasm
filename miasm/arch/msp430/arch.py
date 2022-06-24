@@ -263,13 +263,13 @@ class mn_msp430(cls_mn):
         assert l % 16 == 00, "len %r" % l
 
     @classmethod
-    def getbits(cls, bs, attrib, start, n):
-        if not n:
+    def getbits(cls, bs, attrib, offset, offset_bits, size):
+        if not size:
             return 0
+
+        start = offset * 8 + offset_bits
         o = 0
-        if n > bs.getlen() * 8:
-            raise ValueError('not enough bits %r %r' % (n, len(bs.bin) * 8))
-        while n:
+        while size:
             i = start // 8
             c = cls.getbytes(bs, i)
             if not c:
@@ -277,11 +277,11 @@ class mn_msp430(cls_mn):
             c = ord(c)
             r = 8 - start % 8
             c &= (1 << r) - 1
-            l = min(r, n)
+            l = min(r, size)
             c >>= (r - l)
             o <<= l
             o |= c
-            n -= l
+            size -= l
             start += l
         return o
 
@@ -290,7 +290,7 @@ class mn_msp430(cls_mn):
         out = b""
         for _ in range(l):
             n_offset = (offset & ~1) + 1 - offset % 2
-            out += bs.getbytes(n_offset, 1)
+            out += bs.get_bytes_exact(n_offset, 1)
             offset += 1
         return out
 
@@ -614,4 +614,3 @@ offimm = bs(l=10, cls=(msp430_offs,), fname="offs", order=-1)
 bs_f2_jcc = bs_name(l=3, name={'jnz': 0, 'jz': 1, 'jnc': 2, 'jc': 3, 'jn': 4,
                                'jge': 5, 'jl': 6, 'jmp': 7})
 addop("f2_3", [bs('001'), bs_f2_jcc, offimm])
-

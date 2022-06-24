@@ -581,16 +581,24 @@ Testing
 
 Miasm comes with a set of regression tests. To run all of them:
 
-```pycon
-cd miasm_directory/test
-python test_all.py
+```shell
+pip install -r requirements.txt
+pip install -r test_requirements.txt
+cd <miasm directory>/test
+pytest
 ```
 
 Some options can be specified:
 
-* Mono threading: `-m`
-* Code coverage instrumentation: `-c`
-* Only fast tests: `-t long` (excludes the long tests)
+* Execute all tests in a file/folder: add its name at the end of the command
+* Only execute tests that match a specific pattern: `-k <pattern>` (use `pytest --collect-only [path]` to display the available tests)
+* Multiprocessing: `-n auto` for one process per available core, `-n 5` for 5 processes
+* Debugging: `--pdb` to start the Python Debugger (PDB) on the first test failure, `--trace` to start PDB at the beginning of all tests
+* Code coverage instrumentation: `--cov=miasm` to measure coverage for the whole project, `--cov=miasm.core` to only measure coverage for that package (add this parameter multiple times to select multiple packages)
+* Traceback options: by default, PyTest displays each failed function call along with its parameters and explains why an assertion failed. Use `--tb=native` to use the regular Python traceback instead, and `--tb=no` to display the exception message without any traceback.
+* Markers: some tests are marked with markers. Use `pytest --markers` to list the available markers. Use `-m "<marker_name>"` to execute all tests with this marker, and `-m "not <marker_name>"` to skip all tests with this marker.
+* Optional dependencies: by default, tests attempting to import a missing dependency are marked as skipped instead of failed. To consider them failure, add the `--with-<dependency>` argument (see `pytest --help` for the full list).
+
 
 They already use Miasm
 ======================

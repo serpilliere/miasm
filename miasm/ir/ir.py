@@ -17,22 +17,22 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-from builtins import zip
 import warnings
+from typing import Dict, Set
 
-from itertools import chain
 from future.utils import viewvalues, viewitems
 
 import miasm.expression.expression as m2_expr
-from miasm.expression.expression_helper import get_missing_interval
 from miasm.core.asmblock import AsmBlock, AsmBlockBad, AsmConstraint
 from miasm.core.graph import DiGraph
+from miasm.expression.simplifications import ExpressionSimplifier
+from miasm.expression.expression import ExprAssign
 from miasm.ir.translators import Translator
-from functools import reduce
 from miasm.core import utils
 import re
 from miasm_rs import IRBlock
 from miasm_rs import AssignBlock
+from miasm.core.locationdb import LocKey
 
 def _expr_loc_to_symb(expr, loc_db):
     if not expr.is_loc():
@@ -128,18 +128,18 @@ class TranslatorHtml(Translator):
         return out
 
     def from_ExprOp(self, expr):
-        op = ESCAPE_CHARS.sub(self._fix_chars, expr._op)
-        if expr._op == '-':		# Unary minus
-            return '-' + self.str_protected_child(expr._args[0], expr)
+        op = ESCAPE_CHARS.sub(self._fix_chars, expr.op)
+        if expr.op == '-':		# Unary minus
+            return '-' + self.str_protected_child(expr.args[0], expr)
         if expr.is_associative() or expr.is_infix():
             return (' ' + op + ' ').join([self.str_protected_child(arg, expr)
-                                          for arg in expr._args])
+                                          for arg in expr.args])
 
         op = '<font color="%s">%s</font>' % (utils.COLOR_OP_FUNC, op)
         return (op + '(' +
                 ', '.join(
                     self.from_expr(arg)
-                    for arg in expr._args
+                    for arg in expr.args
                 ) + ')')
 
     def from_ExprAssign(self, expr):
@@ -194,6 +194,7 @@ class IRCFG(DiGraph):
 
     @property
     def blocks(self):
+        # type: () -> Dict[LocKey, IRBlock]
         return self._blocks
 
     def add_irblock(self, irblock):
@@ -303,7 +304,11 @@ class IRCFG(DiGraph):
             return None
         return self.blocks.get(loc_key, None)
 
+    def set_block(self, loc_key, irblock):
+        self.blocks[loc_key] = irblock
+
     def getby_offset(self, offset):
+        # type: (int) -> Set[IRBlock]
         """
         Return the set of loc_keys of irblocks containing @offset
         @offset: address
@@ -328,7 +333,7 @@ class IRCFG(DiGraph):
         for loc_key, block in list(viewitems(self.blocks)):
             assignblks = []
             for assignblk in block:
-                new_assignblk = assignblk.simplify(simplifier)
+                new_assignblk = assignblk.simplify(simplifier.to_new_visitor() if isinstance(simplifier, ExpressionSimplifier) else simplifier)
                 if assignblk != new_assignblk:
                     modified = True
                 assignblks.append(new_assignblk)
@@ -432,9 +437,9 @@ class Lifter(object):
         for index, irb in enumerate(extra_irblocks):
             irs = []
             for assignblk in irb:
-                irs.append(AssignBlock(assignblk, instr))
+                irs.append(AssignBlock([ExprAssign(dst, src) for dst, src in assignblk.items()], instr))
             extra_irblocks[index] = IRBlock(self.loc_db, irb.loc_key, irs)
-        assignblk = AssignBlock(ir_bloc_cur, instr)
+        assignblk = AssignBlock(ir_bloc_cur, instr.to_ir())
         return assignblk, extra_irblocks
 
     def add_instr_to_ircfg(self, instr, ircfg, loc_key=None, gen_pc_updt=False):

@@ -42,20 +42,19 @@ ExprCompose(var1, 0) => var1
 from __future__ import print_function
 
 import sys
+from pathlib import Path
 
-from future.utils import viewitems, viewvalues
+from future.utils import viewvalues
 
-from miasm.analysis.machine import Machine
 from miasm.analysis.binary import Container
-from miasm.expression.expression import ExprOp, ExprCompose, ExprId, ExprInt
 from miasm.analysis.depgraph import DependencyGraph
-
+from miasm.analysis.machine import Machine
 from miasm.arch.x86.ctype import CTypeAMD64_unk
-
-from miasm.core.objc import ExprToAccessC, CHandler
-from miasm.core.objc import CTypesManagerNotPacked
 from miasm.core.ctypesmngr import CAstTypes, CTypePtr, CTypeStruct
 from miasm.core.locationdb import LocationDB
+from miasm.core.objc import CTypesManagerNotPacked
+from miasm.core.objc import ExprToAccessC, CHandler
+from miasm.expression.expression import ExprOp, ExprCompose, ExprId, ExprInt
 
 
 def find_call(ircfg):
@@ -104,7 +103,7 @@ def get_funcs_arg0(ctx, lifter_model_call, ircfg, lbl_head):
         irb = ircfg.get_block(loc_key)
         instr = irb[index].instr
         print('Analysing references from:', hex(instr.offset), instr)
-        g_list = g_dep.get(irb.loc_key, set([element]), index, set([lbl_head]))
+        g_list = g_dep.get(irb.loc_key, {element}, index, {lbl_head})
         for dep in g_list:
             emul_result = dep.emul(lifter_model_call, ctx)
             value = emul_result[element]
@@ -117,56 +116,60 @@ class MyCHandler(CHandler):
     exprToAccessC_cls = MyExprToAccessC
 
 
+def access_c(input_path, output):
+    loc_db = LocationDB()
+    data = open(input_path, 'rb').read()
+    # Digest C information
+    text = """
+    struct human {
+            unsigned short age;
+            unsigned int height;
+            char name[50];
+    };
+    
+    struct ll_human {
+            struct ll_human* next;
+            struct human human;
+    };
+    """
 
-loc_db = LocationDB()
-data = open(sys.argv[1], 'rb').read()
-# Digest C information
-text = """
-struct human {
-        unsigned short age;
-        unsigned int height;
-        char name[50];
-};
+    base_types = CTypeAMD64_unk()
+    types_ast = CAstTypes()
+    types_ast.add_c_decl(text)
 
-struct ll_human {
-        struct ll_human* next;
-        struct human human;
-};
-"""
+    types_mngr = CTypesManagerNotPacked(types_ast, base_types)
 
-base_types = CTypeAMD64_unk()
-types_ast = CAstTypes()
-types_ast.add_c_decl(text)
+    # Analyze binary
+    cont = Container.fallback_container(data, None, addr=0)
 
-types_mngr = CTypesManagerNotPacked(types_ast, base_types)
+    machine = Machine("x86_64")
+    dis_engine, lifter_model_call = machine.dis_engine, machine.lifter_model_call
 
-# Analyze binary
-cont = Container.fallback_container(data, None, addr=0)
+    mdis = dis_engine(cont.bin_stream, loc_db=loc_db)
+    addr_head = 0
+    asmcfg = mdis.dis_multiblock(addr_head)
+    lbl_head = loc_db.get_offset_location(addr_head)
 
-machine = Machine("x86_64")
-dis_engine, lifter_model_call = machine.dis_engine, machine.lifter_model_call
+    lifter = lifter_model_call(loc_db)
+    ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
 
-mdis = dis_engine(cont.bin_stream, loc_db=loc_db)
-addr_head = 0
-asmcfg = mdis.dis_multiblock(addr_head)
-lbl_head = loc_db.get_offset_location(addr_head)
+    output.joinpath("graph_irflow.dot").write_text(ircfg.dot())
 
-lifter = lifter_model_call(loc_db)
-ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
+    # Main function's first argument's type is "struct ll_human*"
+    ptr_llhuman = types_mngr.get_objc(CTypePtr(CTypeStruct('ll_human')))
+    arg0 = ExprId('ptr', 64)
+    ctx = {lifter.arch.regs.RDI: arg0}
+    expr_types = {arg0: (ptr_llhuman,),
+                  ExprInt(0x8A, 64): (ptr_llhuman,)}
 
-open('graph_irflow.dot', 'w').write(ircfg.dot())
+    mychandler = MyCHandler(types_mngr, expr_types)
 
-# Main function's first argument's type is "struct ll_human*"
-ptr_llhuman = types_mngr.get_objc(CTypePtr(CTypeStruct('ll_human')))
-arg0 = ExprId('ptr', 64)
-ctx = {lifter.arch.regs.RDI: arg0}
-expr_types = {arg0: (ptr_llhuman,),
-              ExprInt(0x8A, 64): (ptr_llhuman,)}
+    for expr in get_funcs_arg0(ctx, lifter, ircfg, lbl_head):
+        print("Access:", expr)
+        for c_str, ctype in mychandler.expr_to_c_and_types(expr):
+            print('\taccess:', c_str)
+            print('\tc type:', ctype)
 
-mychandler = MyCHandler(types_mngr, expr_types)
 
-for expr in get_funcs_arg0(ctx, lifter, ircfg, lbl_head):
-    print("Access:", expr)
-    for c_str, ctype in mychandler.expr_to_c_and_types(expr):
-        print('\taccess:', c_str)
-        print('\tc type:', ctype)
+if __name__ == '__main__':
+    access_c(sys.argv[1], Path())

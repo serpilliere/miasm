@@ -1,12 +1,13 @@
-import logging
-import time
+import pytest
+
 from miasm.arch.ppc.arch import mn_ppc
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.utils import decode_hex, encode_hex
-from pdb import pm
+
 
 def h2i(s):
     return decode_hex(s.replace(' ', ''))
+
 
 reg_tests = [
     ('b', "XXXXXXXX    ADDI       R1, R1, 0x20", "38210020"),
@@ -92,9 +93,9 @@ reg_tests = [
     ('b', "XXXXXXXX    XORIS      R10, R10, 0x8000", "6d4a8000"),
 ]
 
-ts = time.time()
-for mode, s, l, in reg_tests:
-    print("-" * 80)
+
+@pytest.mark.parametrize("mode,s,l", reg_tests)
+def test_regs(mode, s, l):
     s = s[12:]
     b = h2i(l)
     print("fromstring %r" % s)
@@ -106,11 +107,11 @@ for mode, s, l, in reg_tests:
     print("dis args %s" % [(str(x), x.size) for x in mn.args])
     print(s)
     print(mn)
-    assert(str(mn).strip() == s)
+    assert (str(mn).strip() == s)
     print('fromstring %r' % s)
     l = mn_ppc.fromstring(s, None, mode)
     print('str args %s' % [(str(x), x.size) for x in l.args])
-    assert(str(l).strip(' ') == s)
+    assert (str(l).strip(' ') == s)
     a = mn_ppc.asm(l)
     print('asm result %s' % [x for x in a])
     print(repr(b))
@@ -120,7 +121,6 @@ for mode, s, l, in reg_tests:
     for x in a:
         print(repr(x))
         rl = mn_ppc.dis(bin_stream_str(x).get_binstream(), mode)
-        assert(str(rl).strip(' ') == s)
+        assert (str(rl).strip(' ') == s)
     print("%r %s" % (b, a))
-    assert(b in a)
-print('TEST time %s' % (time.time() - ts))
+    assert (b in a)

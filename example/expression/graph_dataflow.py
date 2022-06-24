@@ -1,6 +1,9 @@
 from __future__ import print_function
+
+import os
 from argparse import ArgumentParser
 
+import pytest
 from future.utils import viewitems, viewvalues
 
 from miasm.analysis.binary import Container
@@ -11,14 +14,6 @@ from miasm.core.graph import DiGraph
 from miasm.ir.symbexec import SymbolicExecutionEngine
 from miasm.analysis.data_flow import DeadRemoval
 from miasm.core.locationdb import LocationDB
-
-
-parser = ArgumentParser("Simple expression use for generating dataflow graph")
-parser.add_argument("filename", help="File to analyse")
-parser.add_argument("addr", help="Function's address")
-parser.add_argument("-s", "--symb", help="Symbolic execution mode",
-                    action="store_true")
-args = parser.parse_args()
 
 
 def get_node_name(label, i, n):
@@ -33,14 +28,12 @@ def intra_block_flow_symb(lifter, _, flow_graph, irblock, in_nodes, out_nodes):
     print('*' * 40)
     print(irblock)
 
-
     out = sb.modified(mems=False)
     current_nodes = {}
     # Gen mem arg to mem node links
     for dst, src in out:
         src = sb.eval_expr(dst)
         for n in [dst, src]:
-
             all_mems = set()
             all_mems.update(get_expr_mem(n))
 
@@ -91,7 +84,6 @@ def gen_block_data_flow_graph(lifter, ircfg, ad, block_flow_cb):
 
     deadrm(ircfg)
 
-
     irblock_0 = None
     for irblock in viewvalues(ircfg.blocks):
         loc_key = irblock.loc_key
@@ -102,7 +94,6 @@ def gen_block_data_flow_graph(lifter, ircfg, ad, block_flow_cb):
     assert irblock_0 is not None
     flow_graph = DiGraph()
     flow_graph.node2str = node2str
-
 
     irb_in_nodes = {}
     irb_out_nodes = {}
@@ -126,40 +117,49 @@ def gen_block_data_flow_graph(lifter, ircfg, ad, block_flow_cb):
     open('data.dot', 'w').write(flow_graph.dot())
 
 
-ad = int(args.addr, 16)
-loc_db = LocationDB()
-print('disasm...')
-cont = Container.from_stream(open(args.filename, 'rb'), loc_db)
-machine = Machine("x86_32")
+def dataflow(filename, address, symbolic):
+    ad = int(address, 16)
+    loc_db = LocationDB()
+    print('disasm...')
+    cont = Container.from_stream(open(filename, 'rb'), loc_db)
+    machine = Machine("x86_32")
 
-mdis = machine.dis_engine(cont.bin_stream, loc_db=loc_db)
-mdis.follow_call = True
-asmcfg = mdis.dis_multiblock(ad)
-print('ok')
+    mdis = machine.dis_engine(cont.bin_stream, loc_db=loc_db)
+    mdis.follow_call = True
+    asmcfg = mdis.dis_multiblock(ad)
+    print('ok')
+
+    print('generating dataflow graph for:')
+    lifter = machine.lifter_model_call(loc_db)
+    ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
+    deadrm = DeadRemoval(lifter)
+
+    for irblock in viewvalues(ircfg.blocks):
+        print(irblock)
+
+    if symbolic:
+        block_flow_cb = intra_block_flow_symb
+    else:
+        block_flow_cb = intra_block_flow_raw
+
+    gen_block_data_flow_graph(lifter, ircfg, ad, block_flow_cb)
+
+    print('*' * 40)
+    print("""
+     View with:
+    dotty dataflow.dot
+     or
+     Generate ps with pdf:
+    dot -Tps dataflow_xx.dot -o graph.ps
+    """)
 
 
-print('generating dataflow graph for:')
-lifter = machine.lifter_model_call(loc_db)
-ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
-deadrm = DeadRemoval(lifter)
+if __name__ == '__main__':
+    parser = ArgumentParser("Simple expression use for generating dataflow graph")
+    parser.add_argument("filename", help="File to analyse")
+    parser.add_argument("addr", help="Function's address")
+    parser.add_argument("-s", "--symb", help="Symbolic execution mode",
+                        action="store_true")
+    args = parser.parse_args()
 
-
-for irblock in viewvalues(ircfg.blocks):
-    print(irblock)
-
-
-if args.symb:
-    block_flow_cb = intra_block_flow_symb
-else:
-    block_flow_cb = intra_block_flow_raw
-
-gen_block_data_flow_graph(lifter, ircfg, ad, block_flow_cb)
-
-print('*' * 40)
-print("""
- View with:
-dotty dataflow.dot
- or
- Generate ps with pdf:
-dot -Tps dataflow_xx.dot -o graph.ps
-""")
+    dataflow(args.filename, args.addr, args.symb)

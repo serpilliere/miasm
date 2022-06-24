@@ -1,5 +1,7 @@
-import sys
-from asm_test import Asm_Test_64
+import pytest
+
+from .asm_test import Asm_Test_64
+
 
 class Test_ROR_0(Asm_Test_64):
     TXT = '''
@@ -8,6 +10,7 @@ main:
         ROR RAX, 0
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x8877665544332211
 
@@ -19,6 +22,7 @@ main:
         ROR RAX, 8
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x1188776655443322
 
@@ -31,6 +35,7 @@ main:
         ROR RAX, CL
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x2211887766554433
 
@@ -42,6 +47,7 @@ main:
         SHR RAX, 0
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x8877665544332211
 
@@ -53,6 +59,7 @@ main:
         SHR RAX, 8
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x88776655443322
 
@@ -65,9 +72,9 @@ main:
         SHR RAX, CL
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x887766554433
-
 
 
 class Test_ROR_0_64_32(Asm_Test_64):
@@ -77,6 +84,7 @@ main:
         ROR EAX, 0
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x44332211
 
@@ -88,6 +96,7 @@ main:
         ROR EAX, 8
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x11443322
 
@@ -100,6 +109,7 @@ main:
         ROR EAX, CL
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x22114433
 
@@ -111,6 +121,7 @@ main:
         SHR EAX, 0
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x44332211
 
@@ -122,6 +133,7 @@ main:
         SHR EAX, 8
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x443322
 
@@ -134,9 +146,9 @@ main:
         SHR EAX, CL
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x4433
-
 
 
 class Test_SHLD(Asm_Test_64):
@@ -151,30 +163,29 @@ main:
         SHLD        EDX, ESI, CL
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RDX == 0x000000002468ACF0
 
 
-if __name__ == "__main__":
-    [
-        test(*sys.argv[1:])() for test in [
-            Test_ROR_0,
-            Test_ROR_8,
-            Test_ROR_X8,
+@pytest.mark.parametrize("case", [
+        Test_ROR_0,
+        Test_ROR_8,
+        Test_ROR_X8,
 
-            Test_SHR_0,
-            Test_SHR_8,
-            Test_SHR_X8,
+        Test_SHR_0,
+        Test_SHR_8,
+        Test_SHR_X8,
 
-            Test_ROR_0_64_32,
-            Test_ROR_8_64_32,
-            Test_ROR_X8_64_32,
+        Test_ROR_0_64_32,
+        Test_ROR_8_64_32,
+        Test_ROR_X8_64_32,
 
-            Test_SHR_0_64_32,
-            Test_SHR_8_64_32,
-            Test_SHR_X8_64_32,
+        Test_SHR_0_64_32,
+        Test_SHR_8_64_32,
+        Test_SHR_X8_64_32,
 
-            Test_SHLD,
-        ]
-    ]
-
+        Test_SHLD,
+    ])
+def test(case, jitter_name):
+    case(jitter_name)

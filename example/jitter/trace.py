@@ -18,10 +18,13 @@ from miasm.core.locationdb import LocationDB
 
 # Function called at each instruction
 instr_count = 0
+
+
 def instr_hook(jitter):
     global instr_count
     instr_count += 1
     return True
+
 
 # Extension of the Python jitter to track memory accesses
 class ESETrackMemory(EmulatedSymbExec):
@@ -36,27 +39,38 @@ class ESETrackMemory(EmulatedSymbExec):
         print("Write %s: %s" % (dest, data))
         return super(ESETrackMemory, self).mem_write(dest, data)
 
+
 # Parse arguments
 parser = Sandbox_Linux_arml.parser(description="Tracer")
 parser.add_argument("filename", help="ELF Filename")
-options = parser.parse_args()
 
-# Use our memory tracker
-JitCore_Python.SymbExecClass = ESETrackMemory
 
-# Create sandbox, forcing Python jitter
-options.jitter = "python"
-loc_db = LocationDB()
-sb = Sandbox_Linux_arml(loc_db, options.filename, options, globals())
+def main(options):
+    # Use our memory tracker
+    JitCore_Python.SymbExecClass = ESETrackMemory
 
-# Force jit one instr per call, and register our callback
-sb.jitter.jit.set_options(jit_maxline=1, max_exec_per_call=1)
-sb.jitter.exec_cb = instr_hook
+    # Create sandbox, forcing Python jitter
+    options.jitter = "python"
+    loc_db = LocationDB()
+    sb = Sandbox_Linux_arml(loc_db, options.filename, options, globals())
 
-# Run
-start_time = time.time()
-sb.run()
-stop_time = time.time()
+    # Force jit one instr per call, and register our callback
+    sb.jitter.jit.set_options(jit_maxline=1, max_exec_per_call=1)
+    sb.jitter.exec_cb = instr_hook
 
-assert sb.jitter.running is False
-print("Instr speed: %02.f / sec" % (instr_count / (stop_time - start_time)))
+    # Run
+    start_time = time.time()
+    sb.run()
+    stop_time = time.time()
+
+    assert sb.jitter.running is False
+    print("Instr speed: %02.f / sec" % (instr_count / (stop_time - start_time)))
+
+
+def test(sample_md5_arm):
+    path, _ = sample_md5_arm
+    main(parser.parse_args([path, "-a", "0xA684"]))
+
+
+if __name__ == '__main__':
+    main(parser.parse_args())

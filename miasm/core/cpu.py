@@ -1,11 +1,11 @@
-#-*- coding:utf-8 -*-
-
+from ast import Bytes
 from builtins import range
 import re
 import struct
 import logging
 from collections import defaultdict
-
+from math import ceil
+from typing import List, Optional as Option, Set, Dict
 
 from future.utils import viewitems, viewvalues
 
@@ -16,7 +16,7 @@ import miasm.expression.expression as m2_expr
 from miasm.core.bin_stream import bin_stream, bin_stream_str
 from miasm.core.utils import Disasm_Exception
 from miasm.expression.simplifications import expr_simp
-from miasm_rs import BinStream
+from miasm_rs import BinStream, InstructionIR
 
 from miasm.core.asm_ast import AstNode, AstInt, AstId, AstOp
 from miasm.core import utils
@@ -1071,6 +1071,14 @@ class instruction(object):
     def get_info(self, c):
         return
 
+    def to_ir(self):
+        # type: () -> InstructionIR
+        """Converts this instruction into an InstructionIR.
+
+        This is a temporary method that will be removed in the future when instructions will be fully migrated to Python.
+        """
+        return InstructionIR(self.offset if self.offset is not None else 0, self.b if self.b is not None else [], self.name, self.args, str(self))
+
 
 class cls_mn(with_metaclass(metamn, object)):
     args_symb = []
@@ -1080,8 +1088,7 @@ class cls_mn(with_metaclass(metamn, object)):
 
     @classmethod
     def guess_mnemo(cls, bs, attrib, pre_dis_info, offset):
-        candidates = []
-
+        # type: (BinStream, int, Dict, int) -> Set[Bytes]
         candidates = set()
 
         fname_values = pre_dis_info
@@ -1111,7 +1118,7 @@ class cls_mn(with_metaclass(metamn, object)):
                 else:
                     todo.append((dict(fname_values), (nb, v), offset, offset_bit))
 
-        return [c for c in candidates]
+        return candidates
 
     def reset_class(self):
         for f in self.fields_order:
@@ -1153,12 +1160,55 @@ class cls_mn(with_metaclass(metamn, object)):
         return True
 
     @classmethod
-    def getbits(cls, bs, attrib, offset, offset_bit, l):
-        return bs.get_bits(offset, offset_bit, l)
+    def getbits(cls, bs, attrib, offset, offset_bit, size):
+        if not size:
+            return 0
+
+        first_byte = offset + (offset_bit // 8)
+        first_bit_in_first_byte = offset_bit % 8
+        number_bytes_to_read = ceil((size + first_bit_in_first_byte) / 8)
+
+        # Read all bytes in a single step
+        endian_offset = cls.endian_offset(attrib, first_byte)
+        endian_offset = endian_offset if attrib == "b" else endian_offset - number_bytes_to_read + 1
+        data = cls.getbytes(bs, endian_offset, number_bytes_to_read)
+        number = cls.convert_endian(attrib, data)
+
+        # Remove the leading bits that we don't care about (if any)
+        if first_bit_in_first_byte != 0:
+            mask = (1 << ((number_bytes_to_read * 8) - first_bit_in_first_byte)) - 1
+            number &= mask
+
+        # Remove the trailing bits that we don't care about (if any)
+        number >>= (8 - (size % 8) - first_bit_in_first_byte) % 8
+
+        return number
 
     @classmethod
     def getbytes(cls, bs, offset, l):
         return bs.get_bytes_exact(offset, l)
+
+    @classmethod
+    def endian_offset(cls, attrib, offset):
+        raise NotImplementedError("cls_mn.endian_offset is an abstract method")
+
+    @classmethod
+    def endian_offset_u8(cls, attrib, offset):
+        if attrib == "l":
+            return (offset & ~3) + 3 - offset % 4
+        elif attrib == "b":
+            return offset
+        else:
+            raise NotImplementedError("bad attribute: " + repr(attrib))
+
+    @classmethod
+    def convert_endian(cls, attrib, value):
+        if attrib == "l":
+            return int.from_bytes(value, byteorder="little", signed=False)
+        elif attrib == "b":
+            return int.from_bytes(value, byteorder="big", signed=False)
+        else:
+            raise NotImplementedError("bad attribute: " + repr(attrib))
 
     @classmethod
     def pre_dis(cls, v_o, attrib, offset):
@@ -1176,10 +1226,11 @@ class cls_mn(with_metaclass(metamn, object)):
         return fields
 
     @classmethod
-    def dis(cls, bs_o, mode_o = None, offset=0):
-        assert isinstance(bs_o, BinStream)
-        #if not isinstance(bs_o, bin_stream):
-        #    bs_o = bin_stream_str(bs_o)
+    def dis(cls, bs_o, mode_o=None, offset=0):
+        # type: (BinStream, Option[int], int) -> List
+
+        if not isinstance(bs_o, BinStream):
+           bs_o = bin_stream_str(bs_o).get_binstream()
 
         #bs_o.enter_atomic_mode()
 

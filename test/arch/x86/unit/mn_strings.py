@@ -1,7 +1,7 @@
-#! /usr/bin/env python2
-import sys
+import pytest
 
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
+
 
 class Test_SCAS(Asm_Test_32):
     MYSTRING = "test string"
@@ -20,9 +20,9 @@ class Test_SCAS(Asm_Test_32):
     ''' % MYSTRING
 
     def check(self):
-        assert(self.myjit.cpu.ECX == len(self.MYSTRING))
+        assert (self.myjit.cpu.ECX == len(self.MYSTRING))
         mystr = self.myjit.lifter.loc_db.get_name_location('mystr')
-        assert(self.myjit.cpu.EDI == self.myjit.lifter.loc_db.get_location_offset(mystr) + len(self.MYSTRING)+1)
+        assert (self.myjit.cpu.EDI == self.myjit.lifter.loc_db.get_location_offset(mystr) + len(self.MYSTRING) + 1)
 
 
 class Test_MOVS(Asm_Test_32):
@@ -39,15 +39,16 @@ class Test_MOVS(Asm_Test_32):
     .string "%s"
     buffer:
     .string "%s"
-    ''' % (len(MYSTRING), MYSTRING, " "*len(MYSTRING))
+    ''' % (len(MYSTRING), MYSTRING, " " * len(MYSTRING))
 
     def check(self):
-        assert(self.myjit.cpu.ECX == 0)
+        assert (self.myjit.cpu.ECX == 0)
         buffer = self.myjit.lifter.loc_db.get_name_location('buffer')
-        assert(self.myjit.cpu.EDI == self.myjit.lifter.loc_db.get_location_offset(buffer) + len(self.MYSTRING))
+        assert (self.myjit.cpu.EDI == self.myjit.lifter.loc_db.get_location_offset(buffer) + len(self.MYSTRING))
         mystr = self.myjit.lifter.loc_db.get_name_location('mystr')
-        assert(self.myjit.cpu.ESI == self.myjit.lifter.loc_db.get_location_offset(mystr) + len(self.MYSTRING))
+        assert (self.myjit.cpu.ESI == self.myjit.lifter.loc_db.get_location_offset(mystr) + len(self.MYSTRING))
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_SCAS, Test_MOVS]]
+@pytest.mark.parametrize("case", [Test_SCAS, Test_MOVS])
+def test(case, jitter_name):
+    case(jitter_name)

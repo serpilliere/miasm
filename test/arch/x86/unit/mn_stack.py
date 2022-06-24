@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 
 class Test_PUSHPOP(Asm_Test_32):
@@ -55,9 +53,11 @@ BAD:
        INT     0x3
        RET
     '''
+
     def check(self):
-        assert(self.myjit.cpu.ESP-4 == self.myjit.cpu.EBP)
+        assert (self.myjit.cpu.ESP - 4 == self.myjit.cpu.EBP)
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PUSHPOP]]
+@pytest.mark.parametrize("case", [Test_PUSHPOP])
+def test(case, jitter_name):
+    case(jitter_name)

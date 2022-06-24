@@ -1,5 +1,8 @@
 # Build directory
-/build/*
+/build/
+/dist/
+# Virtual environment
+/venv/
 # Emacs files
 *~
 # Compiled python files
@@ -9,3 +12,6 @@
 **.dot
 **.so
 VERSION
+**.bin
+*.exe
+.coverage

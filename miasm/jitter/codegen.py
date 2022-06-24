@@ -161,7 +161,7 @@ class CGen(object):
             loc_key = self.lifter.loc_db.get_or_create_offset_location(offset)
             dst = ExprLoc(loc_key, self.lifter.IRDst.size)
             new_assignblk[self.lifter.IRDst] = dst
-        irs = [AssignBlock(new_assignblk, instr)]
+        irs = [AssignBlock(new_assignblk, instr.to_ir())]
         return IRBlock(self.lifter.loc_db, self.lifter.get_loc_key_for_instr(instr), irs)
 
     def block2assignblks(self, block):
@@ -181,7 +181,7 @@ class CGen(object):
             out = []
             for irblock in irblocks:
                 new_irblock = self.lifter.irbloc_fix_regs_for_mode(irblock, self.lifter.attrib)
-                new_irblock = new_irblock.simplify(expr_simp_high_to_explicit)[1]
+                new_irblock = new_irblock.simplify(expr_simp_high_to_explicit.to_new_visitor())
                 out.append(new_irblock)
             irblocks = out
 

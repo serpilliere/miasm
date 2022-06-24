@@ -17,7 +17,7 @@ class LifterModelCallMsp430Base(Lifter_MSP430, LifterModelCall):
                 ExprAssign(self.ret_reg, ExprOp('call_func_ret', addr, self.sp, self.arch.regs.R15)),
                 ExprAssign(self.sp, ExprOp('call_func_stack', addr, self.sp))
             ],
-            instr
+            instr.to_ir()
         )
         return [call_assignblk], []
 
@@ -28,4 +28,3 @@ class LifterModelCallMsp430(LifterModelCallMsp430Base):
 
     def get_out_regs(self, _):
         return set([self.ret_reg, self.sp])
-

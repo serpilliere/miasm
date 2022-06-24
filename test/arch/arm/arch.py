@@ -1,14 +1,15 @@
 from __future__ import print_function
 import time
 
-from miasm.core.utils import decode_hex, encode_hex
+import pytest
+
+from miasm.core.utils import encode_hex
 from miasm.arch.arm.arch import *
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
-from pdb import pm
-
 
 loc_db = LocationDB()
+
 
 def h2i(s):
     return decode_hex(s.replace(' ', ''))
@@ -16,6 +17,7 @@ def h2i(s):
 
 def u16swap(i):
     return struct.unpack('<H', struct.pack('>H', i))[0]
+
 
 reg_tests_arm = [
     ("001504F4    MOV        R1, LR",
@@ -39,7 +41,6 @@ reg_tests_arm = [
     ("C00CF110    BL         0xFFFFFDF4",
      "7BFFFFEB"),
 
-
     ("000829b0    BLNE       0xFFF87118",
      "441cfe1b"),
 
@@ -61,7 +62,7 @@ reg_tests_arm = [
      "00504fe1"),
     ("C00CD2F0    MSR        CPSR_cf, R1",
      "01f029e1"),
-    ("C00D8A24    LDRB       R2, [R3, 0xFFFFFFFF]",    # LDRB  R2, [R3, #-1]
+    ("C00D8A24    LDRB       R2, [R3, 0xFFFFFFFF]",  # LDRB  R2, [R3, #-1]
      "012053e5"),
     ("C01E59F8    LDREQ      R0, [R1, R0 LSL 0x2]",  # LDREQ R0, [R1, R0, LSL 2]
      "00019107"),
@@ -69,13 +70,13 @@ reg_tests_arm = [
      "000299e7"),
     ('c012a8d8    LDREQ      R0, [R0]',
      '00009005'),
-    ("C00D8AA8    LDR        R0, [R2], 0x4",           # LDR   R0, [R2], 4
+    ("C00D8AA8    LDR        R0, [R2], 0x4",  # LDR   R0, [R2], 4
      "040092e4"),
     ("C00D8A9C    LDR        R0, [PC, 0x514]",
      "14059fe5"),
     ("C03C7A38    LDR        R5, [R0, 0xD4]!",
      "d450b0e5"),
-    ("C00EA214    LDMIA      R0, {R0, R1}",               # LDMIA   R0, {R0, R1}
+    ("C00EA214    LDMIA      R0, {R0, R1}",  # LDMIA   R0, {R0, R1}
      "030090e8"),
     ("C0121D70    LDMGEIA    R1, {R0, R1}",
      "030091a8"),
@@ -89,7 +90,7 @@ reg_tests_arm = [
      "0001bde8"),
     ("C00E0F98    LDMED      SP, {R4, R6}",
      "50009de9"),
-    ("C0161AC0    STMFD      SP!, {R8}",               # stmfd
+    ("C0161AC0    STMFD      SP!, {R8}",  # stmfd
      "00012de9"),
     ("C00E0710    STMIA      R5, {R8, R9}",
      "000385e8"),
@@ -117,7 +118,7 @@ reg_tests_arm = [
      "f9efbe8e"),
     ("C00F3D24    MCRVS      p0, 0x3, R2, c9, c4, 0x3",
      "7420696e"),
-    #("xxxxxxxx    UND        0x0, 0x0",
+    # ("xxxxxxxx    UND        0x0, 0x0",
     # "100000e6"),
     ('XXXXXXXX    BKPT       0x1234',
      '742321e1'),
@@ -224,7 +225,6 @@ reg_tests_arm = [
     ('XXXXXXXX    UXTAB      R5, R2, R8 ROR 0x8',
      '7854e2e6'),
 
-
     ('XXXXXXXX    PKHBT      R1, R2, R3 LSL 0x8',
      '131482e6'),
     ('XXXXXXXX    PKHBT      R1, R2, R3',
@@ -243,26 +243,26 @@ reg_tests_arm = [
     ('XXXXXXXX    MCRCC      p15, 0x0, R8, c2, c0, 0x1',
      '308f023e'),
 
-
 ]
-ts = time.time()
 
-for s, l in reg_tests_arm:
-    print("-" * 80)
+
+@pytest.mark.parametrize("s,l", reg_tests_arm)
+def test_reg_arm(s, l):
     s = s[12:]
     b = h2i((l))
     mn = mn_arm.dis(b, 'l')
     print([str(x) for x in mn.args])
     print(s)
     print(mn)
-    assert(str(mn) == s)
+    assert (str(mn) == s)
     l = mn_arm.fromstring(s, loc_db, 'l')
-    assert(str(l) == s)
+    assert (str(l) == s)
     a = mn_arm.asm(l)
     print([x for x in a])
     print(repr(b))
-    assert(b in a)
+    assert (b in a)
     print(l.to_html())
+
 
 reg_tests_armt = [
     ("0006ff5c    LSLS       R2, R0, 0x1A",
@@ -398,7 +398,6 @@ reg_tests_armt = [
     ("0006ff5c    SUB        SP, SP, 0x670",
      "ADF5CE6D"),
 
-
     ("0006aeee    POP        {R4, PC}",
      "10bd"),
     ("0006b03a    POP        {R4-R6, PC}",
@@ -437,16 +436,14 @@ reg_tests_armt = [
     ("C01015E8    BL         0x1F8D60",
      "F8F1AEFE"),
 
-
-    #("000xxxxx    BL       0x0",
+    # ("000xxxxx    BL       0x0",
     # "00F8"),
-    #("000xxxxx    BL       0x4000",
+    # ("000xxxxx    BL       0x4000",
     # "04F0"),
-    #("000xxxxx    BL       0xFFFFF000",
+    # ("000xxxxx    BL       0xFFFFF000",
     # "FFF7"),
 
-
-    #("0006aea4    MOV      R5, R1",
+    # ("0006aea4    MOV      R5, R1",
     # "460d"),
 
     # adc
@@ -497,7 +494,6 @@ reg_tests_armt = [
 
     ("xxxxxxxx    WFI        ",
      "30bf"),
-
 
     ("xxxxxxxx    PUSH       {R4-R8, LR}",
      "2DE9F041"),
@@ -569,16 +565,12 @@ reg_tests_armt = [
     ("xxxxxxxx    ADD        R3, R3, 0x23800",
      "03F50E33"),
 
-
-
-
     ("xxxxxxxx    B          0x4",
      "00F000B8"),
-    #("xxxxxxxx    BEQ        0x4",
+    # ("xxxxxxxx    BEQ        0x4",
     # "00F000A8"),
     ("xxxxxxxx    BEQ        0x1D4",
      "00F0E880"),
-
 
     ("xxxxxxxx    UBFX       R1, R1, 0x0, 0x9",
      "C1F30801"),
@@ -591,7 +583,6 @@ reg_tests_armt = [
      "C3F10403"),
     ("xxxxxxxx    RSB        R9, R9, R9 LSL 0x4",
      "C9EB0919"),
-
 
     ("xxxxxxxx    ITT        EQ",
      "04BF"),
@@ -614,7 +605,6 @@ reg_tests_armt = [
      "A0F8E030"),
     ("xxxxxxxx    STRH       R3, [R0], 0x2",
      "20F8023B"),
-
 
     ("xxxxxxxx    LDR        R3, [R0, 0xDC]",
      "D0F8DC30"),
@@ -641,8 +631,6 @@ reg_tests_armt = [
     ("xxxxxxxx    STR        R3, [R2, 0xFFFFFFE4]",
      "42F81C3C"),
 
-
-
     ("xxxxxxxx    STR        R1, [R0, R3 LSL 0x2]",
      "40F82310"),
 
@@ -656,7 +644,6 @@ reg_tests_armt = [
     ("xxxxxxxx    TBH        [PC, R0 LSL 0x1]",
      "DFE810F0"),
 
-
     ("xxxxxxxx    STRD       R5, R5, [R2, 0xFFFFFFF0]",
      "42E90455"),
 
@@ -664,7 +651,6 @@ reg_tests_armt = [
      "4FEA7363"),
     ("xxxxxxxx    MOV        R5, R5 LSL 0x3",
      "4FEAC505"),
-
 
     ("xxxxxxxx    SUB        R3, R3, 0x6BE",
      "A3F2BE63"),
@@ -714,12 +700,11 @@ reg_tests_armt = [
     ("xxxxxxxx    CMP        R5, R0 LSR 0x8",
      "B5EB102F"),
 
-
 ]
-print("#" * 40, 'armthumb', '#' * 40)
 
-for s, l in reg_tests_armt:
-    print("-" * 80)
+
+@pytest.mark.parametrize("s,l", reg_tests_armt)
+def test_reg_armthumb(s, l):
     s = s[12:]
     b = h2i((l))
     print(encode_hex(b))
@@ -727,56 +712,57 @@ for s, l in reg_tests_armt:
     print([str(x) for x in mn.args])
     print(s)
     print(mn)
-    assert(str(mn) == s)
+    assert (str(mn) == s)
     l = mn_armt.fromstring(s, loc_db, 'l')
-    assert(str(l) == s)
+    assert (str(l) == s)
     print('Asm..', l)
     a = mn_armt.asm(l)
     print([x for x in a])
     print(repr(b))
-    assert(b in a)
+    assert (b in a)
     print(l.to_html())
 
-print('TEST time', time.time() - ts)
 
-# speed test arm
-o = b""
-for s, l in reg_tests_arm:
-    s = s[12:]
-    b = h2i((l))
-    o += b
+def test_speed():
+    o = b""
+    for s, l in reg_tests_arm:
+        s = s[12:]
+        b = h2i((l))
+        o += b
 
-while len(o) < 1000:
-    o += o
-bs = bin_stream_str(o).get_binstream()
-off = 0
-instr_num = 0
-ts = time.time()
-while off < bs.getlen():
-    mn = mn_arm.dis(bs), 'l', off)
-    instr_num += 1
-    off += 4
-print('instr per sec:', instr_num // (time.time() - ts))
+    while len(o) < 1000:
+        o += o
+    bs = bin_stream_str(o).get_binstream()
+    off = 0
+    instr_num = 0
+    ts = time.time()
+    while off < bs.getlen():
+        mn = mn_arm.dis(bs), 'l', off
+        instr_num += 1
+        off += 4
+        print('instr per sec:', instr_num // (time.time() - ts))
+
+        # speed test thumb
+        o = b""
+        for s, l in reg_tests_armt:
+            s = s[12:]
+        b = h2i((l))
+        o += b
+
+    while len(o) < 1000:
+        o += o
+    bs = bin_stream_str(o)
+    off = 0
+    instr_num = 0
+    ts = time.time()
+    while off < bs.getlen():
+        mn = mn_armt.dis(bs, 'l', off)
+        instr_num += 1
+        off += mn.l
+    print('instr per sec:', instr_num // (time.time() - ts))
 
 
-# speed test thumb
-o = b""
-for s, l in reg_tests_armt:
-    s = s[12:]
-    b = h2i((l))
-    o += b
+def test_profile():
+    import cProfile
 
-while len(o) < 1000:
-    o += o
-bs = bin_stream_str(o)
-off = 0
-instr_num = 0
-ts = time.time()
-while off < bs.getlen():
-    mn = mn_armt.dis(bs, 'l', off)
-    instr_num += 1
-    off += mn.l
-print('instr per sec:', instr_num // (time.time() - ts))
-
-import cProfile
-cProfile.run(r'mn_arm.dis("\xe1\xa0\xa0\x06", "l")')
+    cProfile.run(r'from miasm.arch.arm.arch import mn_arm; mn_arm.dis("\xe1\xa0\xa0\x06", "l")')

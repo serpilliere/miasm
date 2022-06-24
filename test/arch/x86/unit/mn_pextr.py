@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 class Test_PEXTRB(Asm_Test_32):
     TXT = '''
@@ -23,5 +21,6 @@ class Test_PEXTRB(Asm_Test_32):
         assert self.myjit.cpu.EAX == 0x3344
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_PEXTRB]]
+@pytest.mark.parametrize("case", [Test_PEXTRB])
+def test(case, jitter_name):
+    case(jitter_name)

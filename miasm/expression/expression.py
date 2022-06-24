@@ -42,9 +42,8 @@ from miasm.core.utils import force_bytes, cmp_elts
 from miasm.core.graph import DiGraph
 from functools import reduce
 
-
 from miasm_rs import ExprId, ExprInt, ExprLoc, ExprMem, \
-    ExprSlice, ExprCond, ExprCompose, ExprOp, ExprAssign
+    ExprSlice, ExprCond, ExprCompose, ExprOp, ExprAssign, Expr
 
 
 # Define tokens
@@ -627,7 +626,7 @@ def get_expr_locs(expr):
     return locs
 
 
-def test_set(expr, pattern, tks, result):
+def check_set(expr, pattern, tks, result):
     """Test if v can correspond to e. If so, update the context in result.
     Otherwise, return False
     @expr : Expr to match
@@ -658,16 +657,16 @@ def match_expr(expr, pattern, tks, result=None):
 
     if pattern in tks:
         # pattern is a Joker
-        return test_set(expr, pattern, tks, result)
+        return check_set(expr, pattern, tks, result)
 
     if expr.is_int():
-        return test_set(expr, pattern, tks, result)
+        return check_set(expr, pattern, tks, result)
 
     elif expr.is_id():
-        return test_set(expr, pattern, tks, result)
+        return check_set(expr, pattern, tks, result)
 
     elif expr.is_loc():
-        return test_set(expr, pattern, tks, result)
+        return check_set(expr, pattern, tks, result)
 
     elif expr.is_op():
 
@@ -829,7 +828,7 @@ def _expr_compute_cf(op1, op2):
     @op2: Expression
     """
     res = op1 - op2
-    cf = (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb()
+    cf = (((op1 ^ op2) ^ res) ^ ((op1 ^ res) & (op1 ^ op2))).msb
     return cf
 
 def _expr_compute_of(op1, op2):
@@ -840,7 +839,7 @@ def _expr_compute_of(op1, op2):
     @op2: Expression
     """
     res = op1 - op2
-    of = (((op1 ^ res) & (op1 ^ op2))).msb()
+    of = (((op1 ^ res) & (op1 ^ op2))).msb
     return of
 
 def _expr_compute_zf(op1, op2):
@@ -863,7 +862,7 @@ def _expr_compute_nf(op1, op2):
     @op2: Expression
     """
     res = op1 - op2
-    nf = res.msb()
+    nf = res.msb
     return nf
 
 

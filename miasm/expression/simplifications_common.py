@@ -260,8 +260,8 @@ def simp_cst_propagation(e_s, expr):
         args[0].is_op(op_name)):
         X = args[0].args[1]
         Y = args[1]
-        if (e_s(X.msb()) == ExprInt(0, 1) and
-            e_s(Y.msb()) == ExprInt(0, 1)):
+        if (e_s(X.msb) == ExprInt(0, 1) and
+            e_s(Y.msb) == ExprInt(0, 1)):
             args = [args[0].args[0], X + Y]
 
     # ((var >> int1) << int1) => var & mask
@@ -658,7 +658,7 @@ def simp_cond(_, expr):
     # a|int ? b:c => b with int != 0
     elif (expr.cond.is_op('|') and
           expr.cond.args[1].is_int() and
-          expr.cond.args[1].arg != 0):
+          int(expr.cond.args[1]) != 0):
         return expr.src1
 
     # (C?int1:int2)?(A:B) =>

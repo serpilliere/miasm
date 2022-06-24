@@ -1,5 +1,7 @@
-import sys
-from asm_test import Asm_Test_64
+import pytest
+
+from .asm_test import Asm_Test_64
+
 
 class Test_CMOVZ_OK(Asm_Test_64):
     TXT = '''
@@ -11,6 +13,7 @@ main:
         CMOVZ RAX, RBX
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x8877665544332211
 
@@ -26,6 +29,7 @@ main:
         CMOVZ RAX, RBX
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0xAABBCCDDEEFF0011
 
@@ -40,6 +44,7 @@ main:
         CMOVZ EAX, EBX
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x44332211
 
@@ -55,18 +60,16 @@ main:
         CMOVZ EAX, EBX
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0xEEFF0011
 
 
-
-if __name__ == "__main__":
-    [
-        test(*sys.argv[1:])() for test in [
-            Test_CMOVZ_OK,
-            Test_CMOVZ_KO,
-            Test_CMOVZ_OK_64_32,
-            Test_CMOVZ_KO_64_32,
-        ]
-    ]
-
+@pytest.mark.parametrize("case", [
+        Test_CMOVZ_OK,
+        Test_CMOVZ_KO,
+        Test_CMOVZ_OK_64_32,
+        Test_CMOVZ_KO_64_32,
+    ])
+def test(case, jitter_name):
+    case(jitter_name)

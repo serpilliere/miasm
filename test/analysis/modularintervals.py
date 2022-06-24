@@ -1,5 +1,7 @@
-from builtins import range
+import os
 from random import shuffle, seed
+
+import pytest
 
 from miasm.core.interval import interval
 from miasm.analysis.modularintervals import ModularIntervals
@@ -20,18 +22,21 @@ def gen_all_intervals(size):
                 to_ret += [(i, i)]
         yield to_ret
 
+
 def interval_elements(interv):
     """Generator on element of an interval"""
     for sub_range in interv:
         for i in range(sub_range[0], sub_range[1] + 1):
             yield i
 
+
 size = 4
 left, right = list(gen_all_intervals(size)), list(gen_all_intervals(size))
 right_int = list(range(1 << size))
 mask = (1 << size) - 1
 
-def test(left, right):
+
+def check(left, right):
     """Launch tests on left OP right"""
     global size, mask
 
@@ -139,19 +144,30 @@ def test(left, right):
                     assert rez in result
 
 
+@pytest.fixture
+def randomize():
+    seed(0)
+    shuffle(left)
+    shuffle(right)
 
-# Following tests take around 10 minutes with PyPy, but too long for Python
-# interval_uniq = [interval([(i, i)]) for i in xrange(1 << size)]
-# test(left, interval_uniq)
-# test(interval_uniq, right)
 
-# Uncomment the following line for a full test over intervals, which may take
-# several hours
-# test(left, right)
+def test_first_100(randomize):
+    check(left[:100], right[:100])
 
-# Random pick for tests
-seed(0)
-shuffle(left)
-shuffle(right)
 
-test(left[:100], right[:100])
+@pytest.mark.skipif(os.environ.get("miasm_full_intervals") is None, reason="Skipped because this test is too long. To enable it, set the environment variable 'miasm_full_intervals'.")
+def test_all(randomize):
+    """Full interval test, may take several hours"""
+    check(left, right)
+
+
+@pytest.mark.skipif(os.environ.get("miasm_full_intervals") is None, reason="Skipped because this test is too long. To enable it, set the environment variable 'miasm_full_intervals'.")
+@pytest.mark.parametrize("interval_uniq", [interval([(i, i)]) for i in range(1 << size)])
+def test_range(randomize, interval_uniq):
+    check(left, interval_uniq)
+    check(interval_uniq, right)
+
+
+if __name__ == '__main__':
+    randomize()
+    test_first_100(None)

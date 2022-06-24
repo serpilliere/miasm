@@ -1,5 +1,7 @@
-import sys
-from asm_test import Asm_Test_64
+import pytest
+
+from .asm_test import Asm_Test_64
+
 
 class Test_DIV(Asm_Test_64):
     TXT = '''
@@ -9,9 +11,12 @@ main:
         DIV RBX
         RET
     '''
+
     def check(self):
         assert self.myjit.cpu.RAX == 0x7F7
         assert self.myjit.cpu.RDX == 0x440
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_DIV]]
+
+@pytest.mark.parametrize("case", [Test_DIV])
+def test(case, jitter_name):
+    case(jitter_name)

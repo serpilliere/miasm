@@ -50,7 +50,7 @@ class arm_CGen(CGen):
             # Simplify high level operators
             out = []
             for irblock in irblocks:
-                new_irblock = irblock.simplify(expr_simp_high_to_explicit)[1]
+                new_irblock = irblock.simplify(expr_simp_high_to_explicit.to_new_visitor())
                 out.append(new_irblock)
             irblocks = out
 

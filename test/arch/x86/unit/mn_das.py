@@ -1,8 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_32
+from .asm_test import Asm_Test_32
 
 
 class Test_DAS(Asm_Test_32):
@@ -105,5 +103,6 @@ array_al_end:
         pass
 
 
-if __name__ == "__main__":
-    [test(*sys.argv[1:])() for test in [Test_DAS]]
+@pytest.mark.parametrize("case", [Test_DAS])
+def test(case, jitter_name):
+    case(jitter_name)

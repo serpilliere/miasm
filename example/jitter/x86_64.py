@@ -1,35 +1,34 @@
 from argparse import ArgumentParser
-from pdb import pm
-from miasm.jitter.csts import PAGE_READ, PAGE_WRITE, EXCEPT_SYSCALL
+
 from miasm.analysis.machine import Machine
 from miasm.core.locationdb import LocationDB
-
+from miasm.jitter.csts import PAGE_READ, PAGE_WRITE, EXCEPT_SYSCALL
 
 # Some syscalls often used by shellcodes
 # See https://filippo.io/linux-syscall-table/
 SYSCALL = {
-        0: "read",
-        1: "write",
-        2: "open",
-        0x9: "mmap",
-        0x27: "getpid",
-        0x29: "socket",
-        0x2a: "connect",
-        0x2b: "accept",
-        0x2c: "sendto",
-        0x2d: "recvfrom",
-        0x31: "bind",
-        0x32: "listen",
-        0x33: "getsockname",
-        0x34: "getpeername",
-        0x3b: "execve",
-        0x3c: "exit",
-        0x3d: "wait4",
-        0x3e: "kill",
-        0x57: "unlink",
-        0x5a: "chmod",
-        0x5b: "fchmod",
-        0x5c: "chown"
+    0: "read",
+    1: "write",
+    2: "open",
+    0x9: "mmap",
+    0x27: "getpid",
+    0x29: "socket",
+    0x2a: "connect",
+    0x2b: "accept",
+    0x2c: "sendto",
+    0x2d: "recvfrom",
+    0x31: "bind",
+    0x32: "listen",
+    0x33: "getsockname",
+    0x34: "getpeername",
+    0x3b: "execve",
+    0x3c: "exit",
+    0x3d: "wait4",
+    0x3e: "kill",
+    0x57: "unlink",
+    0x5a: "chmod",
+    0x5b: "fchmod",
+    0x5c: "chown"
 }
 
 
@@ -40,8 +39,8 @@ def code_sentinelle(jitter):
 
 
 def log_syscalls(jitter):
-    # For parameters, see
-    # https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux
+    # For parameters, see
+    # https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux
     # Example of how to implement some syscalls
     if jitter.cpu.EAX == 1:
         # Write
@@ -51,7 +50,7 @@ def log_syscalls(jitter):
             jitter.vm.get_mem(jitter.cpu.RSI, size_t),
             size_t
         ))
-        # Return value is the size written
+        # Return value is the size written
         jitter.cpu.EAX = size_t
     elif jitter.cpu.EAX == 0x3c:
         # exit
@@ -68,15 +67,16 @@ def log_syscalls(jitter):
     return True
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description="x86 64 basic Jitter")
-    parser.add_argument("filename", help="x86 64 shellcode filename")
-    parser.add_argument("-j", "--jitter",
-                        help="Jitter engine (default is 'gcc')",
-                        default="gcc")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                        help="Verbose mode")
-    args = parser.parse_args()
+parser = ArgumentParser(description="x86 64 basic Jitter")
+parser.add_argument("filename", help="x86 64 shellcode filename")
+parser.add_argument("-j", "--jitter",
+                    help="Jitter engine (default is 'gcc')",
+                    default="gcc")
+parser.add_argument("--verbose", "-v", action="store_true",
+                    help="Verbose mode")
+
+
+def main(args):
     loc_db = LocationDB()
 
     myjit = Machine("x86_64").jitter(loc_db, args.jitter)
@@ -91,6 +91,10 @@ if __name__ == "__main__":
         myjit.set_trace_log()
     myjit.push_uint64_t(0x1337beef)
     myjit.add_breakpoint(0x1337beef, code_sentinelle)
-    # Add routine catching syscalls
+    # Add routine catching syscalls
     myjit.add_exception_handler(EXCEPT_SYSCALL, log_syscalls)
     myjit.run(run_addr)
+
+
+if __name__ == '__main__':
+    main(parser.parse_args())

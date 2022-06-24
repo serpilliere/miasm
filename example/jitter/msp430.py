@@ -1,11 +1,11 @@
-#! /usr/bin/env python2
-#-*- coding:utf-8 -*-
 from __future__ import print_function
+
 from argparse import ArgumentParser
+
 from miasm.analysis import debugging
-from miasm.jitter.csts import *
 from miasm.analysis.machine import Machine
 from miasm.core.locationdb import LocationDB
+from miasm.jitter.csts import *
 
 parser = ArgumentParser(
     description="""Sandbox raw binary with msp430 engine
@@ -29,10 +29,11 @@ parser.add_argument("addr",
 
 machine = Machine("msp430")
 
+
 def jit_msp430_binary(args):
     loc_db = LocationDB()
     filepath, entryp = args.binary, int(args.addr, 0)
-    myjit = machine.jitter(loc_db, jit_type = args.jitter)
+    myjit = machine.jitter(loc_db, jit_type=args.jitter)
 
     # Log level (if available with jitter engine)
     myjit.set_trace_log(
@@ -48,16 +49,13 @@ def jit_msp430_binary(args):
     )
     myjit.add_breakpoint(0x1337, lambda _: exit(0))
 
-
     # for stack
-    myjit.vm.add_memory_page(0xF000, PAGE_READ | PAGE_WRITE, b"\x00"*0x1000)
+    myjit.vm.add_memory_page(0xF000, PAGE_READ | PAGE_WRITE, b"\x00" * 0x1000)
 
     myjit.cpu.SP = 0xF800
 
     myjit.push_uint16_t(0x1337)
     myjit.init_run(entryp)
-
-
 
     # Handle debugging
     if args.debugging is True:
@@ -67,6 +65,12 @@ def jit_msp430_binary(args):
 
     else:
         print(myjit.continue_run())
+
+
+def test(shellcode_msp430_sc, jitter_name):
+    bin_path, _ = shellcode_msp430_sc
+    jit_msp430_binary(parser.parse_args([bin_path, "0", "--jitter", jitter_name]))
+
 
 if __name__ == '__main__':
     args = parser.parse_args()

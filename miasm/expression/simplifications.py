@@ -3,8 +3,10 @@
 #                                                                              #
 
 import logging
+import warnings
 
 from future.utils import viewitems
+from miasm_rs import ExprVisitor
 
 from miasm.expression import simplifications_common
 from miasm.expression import simplifications_cond
@@ -187,6 +189,13 @@ class ExpressionSimplifier(ExprVisitorCallbackBottomToTop):
     def __call__(self, expression):
         "Call simplification recursively"
         return self.visit(expression)
+
+    def to_new_visitor(self):
+        """Temporary function to convert ExpressionSimplifier to ExprVisitor.
+        Will be removed when ExpressionSimplifier is ported to Rust in the near future."""
+        warnings.warn("ExpressionSimplifier.to_new_visitor is a temporary function and is not part of the Miasm API. It may be removed at any moment without further warnings.")
+
+        return ExprVisitor(lambda e: self.expr_simp_inner(e))
 
 
 # Public ExprSimplificationPass instance with commons passes

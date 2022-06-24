@@ -1,9 +1,6 @@
-#! /usr/bin/env python2
+import pytest
 
-import sys
-
-from asm_test import Asm_Test_16, Asm_Test_32, Asm_Test_64
-from miasm.core.utils import pck16, pck32
+from .asm_test import Asm_Test_16, Asm_Test_32, Asm_Test_64
 
 
 class Test_CBW_16(Asm_Test_16):
@@ -405,41 +402,33 @@ class Test_CQO_64_signed(Asm_Test_64):
         assert self.myjit.cpu.RDX == 0xFFFFFFFFFFFFFFFF
 
 
+@pytest.mark.parametrize("case", [
+    Test_CBW_16,
+    Test_CBW_16_signed,
 
+    Test_CBW_32,
+    Test_CBW_32_signed,
 
-if __name__ == "__main__":
-    tests = [
-        Test_CBW_16,
-        Test_CBW_16_signed,
+    Test_CWD_32,
+    Test_CWD_32_signed,
 
-        Test_CBW_32,
-        Test_CBW_32_signed,
+    Test_CWDE_32,
+    Test_CWDE_32_signed,
 
-        Test_CWD_32,
-        Test_CWD_32_signed,
+    Test_CWDE_64,
+    Test_CWDE_64_signed,
 
-        Test_CWDE_32,
-        Test_CWDE_32_signed,
+    Test_CDQ_32,
+    Test_CDQ_32_signed,
 
-        Test_CWDE_64,
-        Test_CWDE_64_signed,
+    Test_CDQ_64,
+    Test_CDQ_64_signed,
 
-        Test_CDQ_32,
-        Test_CDQ_32_signed,
+    Test_CDQE_64,
+    Test_CDQE_64_signed,
+])
+def test(case, jitter_name):
+    if case in [Test_CQO_64, Test_CQO_64_signed] and jitter_name == "gcc":
+        pytest.skip("GCC does not yet support CQO on 128 bits")
 
-        Test_CDQ_64,
-        Test_CDQ_64_signed,
-
-        Test_CDQE_64,
-        Test_CDQE_64_signed,
-    ]
-    if sys.argv[1] not in ["gcc"]:
-        # TODO XXX CQO use 128 bit not supported in gcc yet!
-        tests += [
-            Test_CQO_64,
-            Test_CQO_64_signed,
-        ]
-
-    [
-        test(*sys.argv[1:])() for test in tests
-    ]
+    case(jitter_name)

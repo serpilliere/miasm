@@ -1,42 +1,37 @@
 from __future__ import print_function
-import sys
 
-from future.utils import viewvalues
-from miasm.analysis.binary import Container
-from miasm.analysis.machine import Machine
-from miasm.core.locationdb import LocationDB
+from miasm.ir.ir import IRCFG
+from .dis_binary import *
 
-#####################################
-# Common section from dis_binary.py #
-#####################################
 
-fdesc = open(sys.argv[1], 'rb')
-loc_db = LocationDB()
+def lift_model_call(input, output):
+    # type: (str, Path) -> IRCFG
+    """
+    Disassembles a binary file and lifts it to IR, then returns the IR control flow graph (IRCFG).
+    While lifting to IR, we model function calls.
+    Look at the differences between the output of 'lift' (dis_binary_lift.py) and this function.
+    :param input: The file to disassemble
+    :return: Its IRCFG
+    """
 
-cont = Container.from_stream(fdesc, loc_db)
+    # Generate the AsmCFG using dis_binary.py
+    machine, mdis, asmcfg = disassemble(input, output)
 
-machine = Machine(cont.arch)
+    # Get a Lifter
+    lifter = machine.lifter_model_call(mdis.loc_db)
 
-mdis = machine.dis_engine(cont.bin_stream, loc_db=cont.loc_db)
+    # Get the IR of the asmcfg
+    ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
 
-addr = cont.entry_point
-asmcfg = mdis.dis_multiblock(addr)
+    # Display each IR basic block
+    print(ircfg)
+    # As with AsmCFGs, they can be accessed individually through ircfg.blocks
 
-#####################################
-#    End common section             #
-#####################################
+    # Output ir control flow graph in a dot file
+    output.joinpath("bin_model_call_ir_cfg.dot").write_text(ircfg.dot())
 
-# Get an IRA converter
-# The sub call are modelised by default operators
-# call_func_ret and call_func_stack
-lifter = machine.lifter_model_call(mdis.loc_db)
+    return ircfg
 
-# Get the IR of the asmcfg
-ircfg = lifter.new_ircfg_from_asmcfg(asmcfg)
 
-# Display each IR basic blocks
-for irblock in viewvalues(ircfg.blocks):
-    print(irblock)
-
-# Output ir control flow graph in a dot file
-open('bin_lifter_model_call_cfg.dot', 'w').write(ircfg.dot())
+if __name__ == '__main__':
+    lift_model_call(sys.argv[1], Path())

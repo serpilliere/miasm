@@ -52,11 +52,10 @@ class JitCore_LLVM_RS(jitcore.JitCore):
 
         # Init rust functions
         loc_db = self.ir_arch.loc_db
-        lifter_x86 = LifterX86(loc_db, opsize)
+        lifter_x86 = LifterX86(loc_db, int(opsize))
 
-        expr_rules = ExprRules()
-        add_explicit_rules(expr_rules)
-        expr_simp = ExprVisitor.visit_bottom_up(expr_rules)
+        expr_simp = ExprRules()
+        add_explicit_rules(expr_simp)
 
 
 

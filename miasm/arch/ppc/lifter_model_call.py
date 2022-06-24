@@ -38,7 +38,7 @@ class LifterModelCallPpc32b(Lifter_PPC32b, LifterModelCall):
                 ),
                 ExprAssign(self.sp, ExprOp('call_func_stack', ad, self.sp)),
             ],
-            instr
+            instr.to_ir()
         )
         return [call_assignblks], []
 

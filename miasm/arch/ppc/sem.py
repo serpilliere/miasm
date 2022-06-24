@@ -58,9 +58,9 @@ sbuild = SemBuilder(ctx)
 
 def mn_compute_flags(rvalue, overflow_expr=None):
     ret = []
-    ret.append(ExprAssign(CR0_LT, rvalue.msb()))
+    ret.append(ExprAssign(CR0_LT, rvalue.msb))
     ret.append(ExprAssign(CR0_GT, (ExprCond(rvalue, ExprInt(1, 1),
-                                         ExprInt(0, 1)) & ~rvalue.msb())))
+                                         ExprInt(0, 1)) & ~rvalue.msb)))
     ret.append(ExprAssign(CR0_EQ, ExprCond(rvalue, ExprInt(0, 1),
                                         ExprInt(1, 1))))
     if overflow_expr != None:
@@ -101,9 +101,9 @@ def mn_do_add(ir, instr, arg1, arg2, arg3):
 
     over_expr = None
     if has_o:
-        msb1 = arg2.msb()
-        msb2 = arg3.msb()
-        msba = rvalue.msb()
+        msb1 = arg2.msb
+        msb2 = arg3.msb
+        msba = rvalue.msb
         over_expr = ~(msb1 ^ msb2) & (msb1 ^ msba)
         flags_update.append(ExprAssign(XER_OV, over_expr))
         flags_update.append(ExprAssign(XER_SO, XER_SO | over_expr))
@@ -113,7 +113,7 @@ def mn_do_add(ir, instr, arg1, arg2, arg3):
 
     if has_c or has_e:
         carry_expr = (((arg2 ^ arg3) ^ rvalue) ^
-                      ((arg2 ^ rvalue) & (~(arg2 ^ arg3)))).msb()
+                      ((arg2 ^ rvalue) & (~(arg2 ^ arg3)))).msb
         flags_update.append(ExprAssign(XER_CA, carry_expr))
 
     return ([ ExprAssign(arg1, rvalue) ] + flags_update), []
@@ -572,7 +572,7 @@ def mn_do_sraw(ir, instr, ra, rs, rb):
     mask = ExprCond(rb[5:6], ExprInt(0xFFFFFFFF, 32),
                     (ExprInt(0xFFFFFFFF, 32) >>
                      (ExprInt(32, 32) - (rb & ExprInt(0b11111, 32)))))
-    ret.append(ExprAssign(XER_CA, rs.msb() &
+    ret.append(ExprAssign(XER_CA, rs.msb &
                        ExprCond(rs & mask, ExprInt(1, 1), ExprInt(0, 1))))
 
     return ret, []
@@ -586,7 +586,7 @@ def mn_do_srawi(ir, instr, ra, rs, imm):
 
     mask = ExprInt(0xFFFFFFFF >> (32 - int(imm)), 32)
 
-    ret.append(ExprAssign(XER_CA, rs.msb() &
+    ret.append(ExprAssign(XER_CA, rs.msb &
                        ExprCond(rs & mask, ExprInt(1, 1), ExprInt(0, 1))))
 
     return ret, []
@@ -714,9 +714,9 @@ def mn_do_sub(ir, instr, arg1, arg2, arg3):
 
     over_expr = None
     if has_o:
-        msb1 = arg2.msb()
-        msb2 = arg3.msb()
-        msba = rvalue.msb()
+        msb1 = arg2.msb
+        msb2 = arg3.msb
+        msba = rvalue.msb
         over_expr = (msb1 ^ msb2) & (msb1 ^ msba)
         flags_update.append(ExprAssign(XER_OV, over_expr))
         flags_update.append(ExprAssign(XER_SO, XER_SO | over_expr))
@@ -726,7 +726,7 @@ def mn_do_sub(ir, instr, arg1, arg2, arg3):
 
     if has_c or has_e:
         carry_expr = ((((arg3 ^ arg2) ^ rvalue) ^
-                       ((arg3 ^ rvalue) & (arg3 ^ arg2))).msb())
+                       ((arg3 ^ rvalue) & (arg3 ^ arg2))).msb)
         flags_update.append(ExprAssign(XER_CA, ~carry_expr))
 
     return ([ ExprAssign(arg1, rvalue) ] + flags_update), []
