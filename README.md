@@ -548,23 +548,31 @@ To enable code JIT, one of the following module is mandatory:
 Configuration
 -------------
 
+To install Miasm (run in the directory in which you cloned the repository):
+- system-wide: `sudo pip install .`
+- for your user only: `pip install --user .`
+- in a virtual environment: `pip install .`
+
+Miasm provides extra features that are disabled by default. 
+To enable them, use `install '.[extra1,extra2,...]'` in the commands above.
+For example, `pip install --user '.[z3]'` installs Miasm with Z3 for your user only.
+To enable all extra features, use `'.[full]'`.
+
 To use the jitter, GCC or LLVM is recommended
 * GCC (any version)
 * Clang (any version)
 * LLVM
   * Debian (testing/unstable): Not tested
-  * Debian stable/Ubuntu/Kali/whatever: `pip install llvmlite` or install from [llvmlite](https://github.com/numba/llvmlite)
+  * Debian stable/Ubuntu/Kali/whatever: use `pip install '.[llvm]'` or install from [llvmlite](https://github.com/numba/llvmlite)
   * Windows: Not tested
-* Build and install Miasm:
-```pycon
-$ cd miasm_directory
-$ python setup.py build
-$ sudo python setup.py install
-```
 
 If something goes wrong during one of the jitter modules compilation, Miasm will
 skip the error and disable the corresponding module (see the compilation
 output).
+
+Other optional features:
+* To enable the Z3 solver, use `pip install '.[z3]'` or install [z3-solver](https://pypi.org/project/z3-solver/)
+* To enable the pycparser dependency, use `pip install '.[cparser]'` or install [pycparser](https://github.com/eliben/pycparser)
 
 Windows & IDA
 -------------
@@ -582,8 +590,7 @@ Testing
 Miasm comes with a set of regression tests. To run all of them:
 
 ```pycon
-pip install -r requirements.txt
-pip install -r test_requirements.txt
+pip install .
 cd miasm_directory/test
 python test_all.py
 ```

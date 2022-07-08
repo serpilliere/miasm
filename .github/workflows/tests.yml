@@ -19,20 +19,20 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install llvmlite requirements
+      run: sudo apt-get install libedit-dev
+
     - name: Update pip
       run: pip install pip --upgrade
-
-    - name: Install requirements
-      run: pip install -r requirements.txt
-
-    - name: Install optional requirements
-      run: pip install -r optional_requirements.txt
 
     - name: Install llvm
       run: sudo apt-get install llvm
 
-    - name: Install Miasm
-      uses: ./.github/actions/install
+    - name: Install miasm-rs
+      run: cd miasm-rs; pip install .
+
+    - name: Install miasm
+      run: pip install '.[full]'
 
     - name: Base tests
       run: cd test; python --version |& grep -q "Python 3" || flags="-W error"; python $flags test_all.py && git ls-files -o --exclude-standard
@@ -91,6 +91,9 @@ jobs:
       run: cd test; python --version |& grep -q "Python 3" || flags="-W error"; python $flags test_all.py $MIASM_TEST_EXTRA_ARG && git ls-files -o --exclude-standard
       env:
         MIASM_TEST_EXTRA_ARG: -o cparser
+
+    - name: Clone extended tests
+      run: git clone https://github.com/cea-sec/miasm-extended-tests
 
     - name: Loader tests
       run: cd example/loader; python --version |& grep -q "Python 3" || flags="-W error"; for i in ../../miasm-extended-tests/loader/dll_win_xp/*.dll; do python get_exports.py $i; done

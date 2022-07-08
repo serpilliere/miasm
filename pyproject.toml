@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "miasm"
+description = "Machine code manipulation library"
+readme = "README.md"
+keywords = [
+    "reverse engineering",
+    "disassembler",
+    "emulator",
+    "symbolic execution",
+    "intermediate representation",
+    "assembler",
+]
+classifiers = [
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.6",
+]
+dependencies = [
+    "future",
+    "pyparsing~=2.0",
+    "miasm_rs"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+cparser = [
+    "pycparser"
+]
+z3 = [
+    "z3-solver==4.8.7.0"
+]
+llvm = [
+    "llvmlite==0.31.0",
+]
+full = [
+    "miasm[cparser,z3,llvm]"
+]
+
+[tool.setuptools]
+packages = ["miasm"]
+
+[tool.setuptools.dynamic]
+version = { attr = "miasm.VERSION" }

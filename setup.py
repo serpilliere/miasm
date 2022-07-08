@@ -1,8 +1,5 @@
-#! /usr/bin/env python2
-
 from __future__ import print_function
 from distutils.core import setup, Extension
-from distutils.util import get_platform
 from distutils.sysconfig import get_python_lib, get_config_vars
 from distutils.dist import DistributionMetadata
 from distutils.command.install_data import install_data
@@ -12,7 +9,6 @@ import io
 import os
 import platform
 from shutil import copy2, copyfile, rmtree
-import sys
 import tempfile
 import atexit
 
@@ -47,7 +43,7 @@ def win_get_llvm_reg():
     except FileNotFoundError:
       pass
     return winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, REG_PATH, 0, winreg.KEY_READ)
-  
+
 def win_find_clang_path():
     try:
         with win_get_llvm_reg() as rkey:
@@ -84,29 +80,6 @@ if is_win and is_64bit:
         print("Warning: couldn't find a Clang/LLVM installation. Some runtime functions needed by the jitter won't be compiled.")
 
 def build_all():
-    packages=[
-        "miasm",
-        "miasm/arch",
-        "miasm/arch/x86",
-        "miasm/arch/arm",
-        "miasm/arch/aarch64",
-        "miasm/arch/msp430",
-        "miasm/arch/mep",
-        "miasm/arch/sh4",
-        "miasm/arch/mips32",
-        "miasm/arch/ppc",
-        "miasm/core",
-        "miasm/expression",
-        "miasm/ir",
-        "miasm/ir/translators",
-        "miasm/analysis",
-        "miasm/os_dep",
-        "miasm/os_dep/linux",
-        "miasm/loader",
-        "miasm/jitter",
-        "miasm/jitter/arch",
-        "miasm/jitter/loader",
-    ]
     ext_modules_all = [
         Extension(
             "miasm.jitter.VmMngr",
@@ -242,10 +215,6 @@ def build_all():
         print("build with", repr(name))
         try:
             s = setup(
-                name = "miasm",
-                version = __import__("miasm").VERSION,
-                packages = packages,
-                data_files=[('', ["README.md"])],
                 package_data = {
                     "miasm": [
                         "jitter/*.h",
@@ -253,30 +222,14 @@ def build_all():
                         "VERSION"
                     ]
                 },
-                install_requires=['future', 'pyparsing~=2.0'],
                 cmdclass={"install_data": smart_install_data},
                 ext_modules = ext_modules,
                 # Metadata
                 author = "Fabrice Desclaux",
                 author_email = "serpilliere@droid-corp.org",
-                description = "Machine code manipulation library",
                 license = "GPLv2",
                 long_description=long_description,
                 long_description_content_type=long_description_content_type,
-                keywords = [
-                    "reverse engineering",
-                    "disassembler",
-                    "emulator",
-                    "symbolic execution",
-                    "intermediate representation",
-                    "assembler",
-                ],
-                classifiers=[
-                    "Programming Language :: Python :: 2",
-                    "Programming Language :: Python :: 3",
-                    "Programming Language :: Python :: 2.7",
-                    "Programming Language :: Python :: 3.6",
-                ],
                 url = "http://miasm.re",
             )
         except SystemExit as e:
@@ -353,4 +306,3 @@ DistributionMetadata.write_pkg_file = _write_pkg_file
 
 
 build_all()
-
