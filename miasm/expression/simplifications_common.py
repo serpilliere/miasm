@@ -1147,8 +1147,8 @@ def simp_cmp_bijective_op(expr_simp, expr):
     if not args_b:
         return ExprOp(TOK_EQUAL, ExprOp(op, *args_a), ExprInt(0, args_a[0].size))
     
-    arg_a = ExprOp(op, *args_a)
-    arg_b = ExprOp(op, *args_b)
+    arg_a = ExprOp(op, *args_a) if len(args_a) > 1 else args_a[0]
+    arg_b = ExprOp(op, *args_b) if len(args_b) > 1 else args_b[0]
     return ExprOp(TOK_EQUAL, arg_a, arg_b)
 
 
